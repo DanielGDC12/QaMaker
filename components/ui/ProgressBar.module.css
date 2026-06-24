@@ -1,0 +1,20 @@
+.track {
+  width: 100%;
+  background: var(--border);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.md {
+  height: 6px;
+}
+
+.lg {
+  height: 10px;
+}
+
+.fill {
+  height: 100%;
+  border-radius: var(--radius-pill);
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1), background 0.3s ease;
+}

@@ -1,0 +1,46 @@
+.wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.25rem;
+  padding: 0 0.625rem 0 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  transition: border-color 0.14s ease, box-shadow 0.14s ease, opacity 0.14s ease;
+}
+.wrap:focus-within {
+  border-color: var(--color-pink);
+  box-shadow: 0 0 0 3px var(--pink-weak);
+}
+.wrap[data-pending] {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.select {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding-right: 1.25rem;
+  cursor: pointer;
+  outline: none;
+}
+
+.caret {
+  position: absolute;
+  right: 0.5rem;
+  color: var(--faint);
+  pointer-events: none;
+}
