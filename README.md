@@ -1,36 +1,81 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# QA Maker
 
-## Getting Started
+Ferramenta interna da **Agência FG** para auditorias de qualidade (QA) em lojas
+de e-commerce de clientes. A equipe escolhe um projeto (loja), percorre um
+checklist de pontos de QA, marca o status de cada um e anexa o print de erros
+encontrados.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Next.js 16** (App Router) + **React 19**
+- **Neon** (Postgres serverless) com **Drizzle ORM** (driver HTTP)
+- **Auth.js v5** — login só com Google, restrito ao domínio `@agenciafg.com.br`
+- **Vercel Blob** — armazenamento dos prints de erro
+- **Vitest** — testes unitários
+- Deploy na **Vercel**
+
+## Setup local
+
+1. Instale as dependências:
+
+   ```bash
+   npm install
+   ```
+
+2. Crie o `.env.local` a partir do modelo e preencha (ver detalhes abaixo):
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+3. Aplique o schema e popule o template-padrão no banco:
+
+   ```bash
+   npm run db:migrate
+   npm run db:seed
+   ```
+
+4. Rode o app:
+
+   ```bash
+   npm run dev
+   ```
+
+   Acesse http://localhost:3000 e entre com uma conta `@agenciafg.com.br`.
+
+## Variáveis de ambiente
+
+| Variável | Onde obter |
+|---|---|
+| `DATABASE_URL` | Connection string **pooled** do Neon (`...-pooler...?sslmode=require`) |
+| `AUTH_SECRET` | `openssl rand -base64 32` |
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google Cloud Console → Credenciais → ID OAuth (Aplicativo da Web) |
+| `BLOB_READ_WRITE_TOKEN` | Painel Vercel → Storage → Blob |
+
+No Google OAuth, cadastre a origem (`http://localhost:3000`) e o redirect URI
+`http://localhost:3000/api/auth/callback/google` (e os equivalentes de produção).
+
+## Comandos
+
+| Comando | Descrição |
+|---|---|
+| `npm run dev` | Servidor de desenvolvimento |
+| `npm run build` | Build de produção |
+| `npm test` | Testes unitários (vitest) |
+| `npm run db:generate` | Gera migração a partir do schema Drizzle |
+| `npm run db:migrate` | Aplica migrações pendentes |
+| `npm run db:seed` | Popula o template master (idempotente; `FORCE=1` recria) |
+| `npm run db:studio` | Drizzle Studio |
+
+## Estrutura
+
+```
+app/            rotas (projetos, projetos/[id], admin/template, login, api/*)
+components/     ui/ (primitivos) · layout/ · projects/ · points/ · admin/
+lib/            constants (status/progresso) · auth-domain · auth-guard · image · db/
+auth.config.ts  auth.ts  proxy.ts   (Auth.js + gate de domínio)
+drizzle/        migrações SQL
+tests/          testes unitários
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Convenções de código e decisões de arquitetura: ver [CLAUDE.md](CLAUDE.md).
