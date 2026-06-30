@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProject, getProjectPoints } from "@/lib/db/queries";
 import { PointsBoard } from "@/components/points/PointsBoard";
+import { DeleteProjectButton } from "@/components/projects/DeleteProjectButton";
 import styles from "./detalhe.module.css";
 
 export const dynamic = "force-dynamic";
@@ -42,7 +43,13 @@ export default async function ProjetoDetalhePage({
         Voltar
       </Link>
 
-      <h1 className={styles.title}>{project.name}</h1>
+      <div className={styles.titleRow}>
+        <h1 className={styles.title}>{project.name}</h1>
+        <DeleteProjectButton
+          projectId={project.id}
+          projectName={project.name}
+        />
+      </div>
 
       {points.length === 0 ? (
         <p className={styles.empty}>

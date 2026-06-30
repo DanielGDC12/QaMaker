@@ -1,0 +1,36 @@
+.wrap {
+  min-height: 70dvh;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1.5rem;
+}
+
+.card {
+  text-align: center;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.code {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-pink);
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.title {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--color-bordo);
+}
+
+.text {
+  color: var(--muted);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+  max-width: 42ch;
+}

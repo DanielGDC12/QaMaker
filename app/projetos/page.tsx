@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { listProjectsWithProgress } from "@/lib/db/queries";
 import { ProjectRow } from "@/components/projects/ProjectRow";
 import { NewProjectButton } from "@/components/projects/NewProjectButton";
@@ -18,7 +19,12 @@ export default async function ProjetosPage() {
           <p className={styles.eyebrow}>Auditorias de QA</p>
           <h1 className={styles.title}>Projetos</h1>
         </div>
-        <NewProjectButton />
+        <div className={styles.headActions}>
+          <Link href="/admin/template" className={styles.templateLink}>
+            Editar template
+          </Link>
+          <NewProjectButton />
+        </div>
       </div>
 
       {projects.length === 0 ? (

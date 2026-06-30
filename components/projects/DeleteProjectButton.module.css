@@ -1,0 +1,36 @@
+.dialog {
+  border: none;
+  border-radius: var(--radius);
+  padding: 0;
+  width: min(440px, calc(100vw - 2rem));
+  box-shadow: var(--shadow-3);
+  color: var(--text);
+}
+.dialog::backdrop {
+  background: rgba(52, 2, 4, 0.38);
+  backdrop-filter: blur(2px);
+}
+
+.body {
+  padding: 1.75rem;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-bordo);
+}
+
+.text {
+  margin-top: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  margin-top: 1.5rem;
+}

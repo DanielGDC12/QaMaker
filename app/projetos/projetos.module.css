@@ -64,3 +64,18 @@
   font-size: 0.875rem;
   margin-bottom: 0.75rem;
 }
+
+.headActions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.templateLink {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+  transition: color 0.14s ease;
+}
+.templateLink:hover {
+  color: var(--color-pink);
+}

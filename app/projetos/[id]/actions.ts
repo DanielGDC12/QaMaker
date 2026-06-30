@@ -1,11 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { del } from "@vercel/blob";
 import { requireFGUser } from "@/lib/auth-guard";
 import {
   getProjectPoint,
   updateProjectPoint,
+  deleteProject,
 } from "@/lib/db/queries";
 import { POINT_STATUSES, type PointStatus } from "@/lib/constants";
 
@@ -47,4 +49,25 @@ export async function setPointImage(
     }
   }
   revalidatePath(`/projetos/${projectId}`);
+}
+
+/**
+ * Exclui o projeto e todos os seus pontos (cascade), removendo os blobs
+ * das imagens de erro. Redireciona para a lista ao final.
+ */
+export async function deleteProjectAction(projectId: string) {
+  await requireFGUser();
+
+  const imageUrls = await deleteProject(projectId);
+
+  if (imageUrls.length > 0) {
+    try {
+      await del(imageUrls);
+    } catch {
+      // blobs órfãos não quebram a exclusão; limpeza periódica resolve.
+    }
+  }
+
+  revalidatePath("/projetos");
+  redirect("/projetos");
 }
