@@ -22,13 +22,27 @@ Next.js 16 (App Router) · React 19 · Drizzle ORM + Neon (driver HTTP serverles
 - **`lib/db/index.ts` é lazy** (proxy memoizado) → `next build` não exige env.
 - **Progresso**: status `feito` e `nao_possivel` contam; `pendente`/`iniciado`
   não. Lógica em `lib/constants.ts` (`calcProgress`, `deriveProjectStatus`).
-- Cada novo projeto **copia** o template master (`template_points`) para
-  `project_points` independentes. Editar o template não afeta projetos existentes.
+- **Projetos nascem vazios**: sem template/checklist-padrão. Os pontos de QA são
+  criados manualmente na página do projeto (`AddPointButton`), escolhendo a
+  "página de QA" (categoria em `CATEGORIES`). O board agrupa por categoria na
+  ordem canônica de `CATEGORIES`.
+- **Acesso externo (convidado do cliente)**: pessoas fora do domínio FG acessam
+  UM projeto via link tokenizado (`/acesso/[token]`, Node runtime → grava
+  cookie assinado `qam_ext_share_{projectId}`), sem login. Fonte da sessão
+  externa: `lib/external-share-token.ts` (HMAC **Web Crypto**, nunca
+  `node:crypto`/`Buffer` — é importado pelo `proxy.ts`/Edge; env
+  `EXTERNAL_SHARE_COOKIE_SECRET`). Autorização por ator:
+  `requireProjectActor(projectId)` em `lib/auth-guard.ts` (FG OU externo;
+  revogação sempre reconferida no banco). Regras: externo vê só pontos com
+  `created_by_is_external = true`, mas edita/exclui só os próprios
+  (`created_by = share.id`); tag "Qa Cliente" só aparece para FG. **Nunca**
+  troque `deleteProjectAction` nem as `share-actions` por `requireProjectActor`
+  — são FG-only (`requireFGUser`). `project_points.created_by`/`updated_by` são
+  polimórficos (e-mail FG ou `project_shares.id`), sem FK.
 
 ## Comandos
 - `npm run dev` · `npm run build` · `npm test` (vitest)
-- `npm run db:generate` (migração a partir do schema) · `db:migrate` · `db:seed`
-  (idempotente; `FORCE=1` recria) · `db:studio`
+- `npm run db:generate` (migração a partir do schema) · `db:migrate` · `db:studio`
 
 ## Env (.env.local — ver .env.example)
 `DATABASE_URL` (Neon, pooled) · `AUTH_SECRET` · `AUTH_GOOGLE_ID` ·
@@ -36,6 +50,5 @@ Next.js 16 (App Router) · React 19 · Drizzle ORM + Neon (driver HTTP serverles
 `<origin>/api/auth/callback/google`.
 
 ## Pendências do plano
-Conteúdo real do template master (seed atual em `lib/db/seed-data.ts` é
-provisório, 19 pontos), domínio de deploy e plano Vercel — ver perguntas abertas
-do plano de implementação.
+Domínio de deploy e plano Vercel — ver perguntas abertas do plano de
+implementação.

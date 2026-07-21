@@ -9,14 +9,40 @@ interface Props {
   projectId: string;
   pointId: string;
   initialUrl: string | null;
+  /** Somente leitura (externo vendo ponto de terceiro): sem enviar/remover. */
+  readOnly?: boolean;
 }
 
-export function ImageSlot({ projectId, pointId, initialUrl }: Props) {
+export function ImageSlot({
+  projectId,
+  pointId,
+  initialUrl,
+  readOnly = false,
+}: Props) {
   const [url, setUrl] = useState<string | null>(initialUrl);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Modo leitura: mostra só a imagem (ou um placeholder), sem interação.
+  if (readOnly) {
+    if (url) {
+      return (
+        <div className={styles.slot}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={url} alt="Print do erro" className={styles.preview} />
+        </div>
+      );
+    }
+    return (
+      <div className={styles.col}>
+        <div className={`${styles.drop} ${styles.readOnly}`} aria-hidden>
+          <span className={styles.dropText}>Sem print</span>
+        </div>
+      </div>
+    );
+  }
 
   async function handleFile(file: File) {
     setError(null);

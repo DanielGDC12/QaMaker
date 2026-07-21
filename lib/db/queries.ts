@@ -1,12 +1,9 @@
 import { eq, asc, desc, sql, and } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "./index";
-import {
-  projects,
-  projectPoints,
-  templatePoints,
-  users,
-} from "./schema";
+import { projects, projectPoints, projectShares, users } from "./schema";
 import type { PointStatus, Category } from "@/lib/constants";
+import type { Actor } from "@/lib/auth-guard";
 
 /* ── Usuários ─────────────────────────────────────────────── */
 export async function upsertUser(u: {
@@ -80,46 +77,82 @@ export async function getProjectPoint(pointId: string) {
   return row ?? null;
 }
 
-export async function getProjectPoints(projectId: string) {
+/**
+ * Ponto enriquecido com o nome de exibição do autor/editor quando for um
+ * ator externo (resolvido via JOIN com project_shares). Para atores FG, os
+ * campos *DisplayName vêm null (a UI cai no e-mail).
+ */
+export type ProjectPointWithActor = typeof projectPoints.$inferSelect & {
+  createdByDisplayName: string | null;
+  updatedByDisplayName: string | null;
+};
+
+/**
+ * Pontos de um projeto, filtrados por ator:
+ * - FG vê tudo;
+ * - externo vê SÓ pontos criados por atores externos (de qualquer share do
+ *   projeto — não só os próprios; a restrição de "só os próprios" vale para
+ *   editar/excluir, não para visualizar).
+ *
+ * `created_by`/`updated_by` são polimórficos (e-mail FG ou share.id uuid);
+ * o cast `::text` no JOIN permite casar o uuid do share sem erro de tipo
+ * (e-mails simplesmente não casam com nenhum uuid → DisplayName null).
+ */
+export async function getProjectPoints(
+  projectId: string,
+  actor: Actor
+): Promise<ProjectPointWithActor[]> {
+  const createdByShare = alias(projectShares, "created_by_share");
+  const updatedByShare = alias(projectShares, "updated_by_share");
+
   return db
-    .select()
+    .select({
+      id: projectPoints.id,
+      projectId: projectPoints.projectId,
+      category: projectPoints.category,
+      title: projectPoints.title,
+      subtitle: projectPoints.subtitle,
+      displayOrder: projectPoints.displayOrder,
+      status: projectPoints.status,
+      errorImageUrl: projectPoints.errorImageUrl,
+      notes: projectPoints.notes,
+      updatedAt: projectPoints.updatedAt,
+      createdBy: projectPoints.createdBy,
+      createdByIsExternal: projectPoints.createdByIsExternal,
+      updatedBy: projectPoints.updatedBy,
+      createdByDisplayName: createdByShare.displayName,
+      updatedByDisplayName: updatedByShare.displayName,
+    })
     .from(projectPoints)
-    .where(eq(projectPoints.projectId, projectId))
+    .leftJoin(
+      createdByShare,
+      sql`${projectPoints.createdBy} = ${createdByShare.id}::text`
+    )
+    .leftJoin(
+      updatedByShare,
+      sql`${projectPoints.updatedBy} = ${updatedByShare.id}::text`
+    )
+    .where(
+      actor.type === "fg"
+        ? eq(projectPoints.projectId, projectId)
+        : and(
+            eq(projectPoints.projectId, projectId),
+            eq(projectPoints.createdByIsExternal, true)
+          )
+    )
     .orderBy(asc(projectPoints.displayOrder));
 }
 
-/* ── Criar projeto copiando o template master (atômico) ───── */
-export async function createProjectFromTemplate(
+/* ── Criar projeto vazio (pontos são adicionados manualmente) ── */
+export async function createProject(
   name: string,
   createdBy: string
 ): Promise<string> {
-  const projectId = crypto.randomUUID();
-  const template = await db
-    .select()
-    .from(templatePoints)
-    .orderBy(asc(templatePoints.displayOrder));
-
-  const insertProject = db
+  const [row] = await db
     .insert(projects)
-    .values({ id: projectId, name, createdBy });
-
-  if (template.length === 0) {
-    await insertProject;
-    return projectId;
-  }
-
-  const pointRows = template.map((t) => ({
-    projectId,
-    templatePointId: t.id,
-    category: t.category,
-    title: t.title,
-    subtitle: t.subtitle,
-    displayOrder: t.displayOrder,
-  }));
-
-  // batch = transação única sobre HTTP no driver Neon
-  await db.batch([insertProject, db.insert(projectPoints).values(pointRows)]);
-  return projectId;
+    .values({ name, createdBy })
+    .returning({ id: projects.id });
+  return row.id;
 }
 
 /* ── Atualizar um ponto do projeto ────────────────────────── */
@@ -148,12 +181,20 @@ export async function addProjectPoint(
     title: string;
     subtitle?: string | null;
     displayOrder: number;
+    errorImageUrl?: string | null;
   },
-  updatedBy: string
+  /** Autor: `id` = e-mail FG ou share.id; `isExternal` marca a origem. */
+  author: { id: string; isExternal: boolean }
 ) {
   const [row] = await db
     .insert(projectPoints)
-    .values({ projectId, ...data, updatedBy })
+    .values({
+      projectId,
+      ...data,
+      createdBy: author.id,
+      createdByIsExternal: author.isExternal,
+      updatedBy: author.id,
+    })
     .returning();
   return row;
 }
@@ -163,6 +204,76 @@ export async function deleteProjectPoint(pointId: string) {
     .delete(projectPoints)
     .where(eq(projectPoints.id, pointId))
     .returning({ errorImageUrl: projectPoints.errorImageUrl });
+  return row ?? null;
+}
+
+/* ── Acessos externos (project_shares) ────────────────────── */
+
+/** Cria um share já com o token hasheado. Retorna a linha criada. */
+export async function createShareRow(data: {
+  projectId: string;
+  displayName: string;
+  contactNote?: string | null;
+  tokenHash: string;
+  createdBy: string;
+}) {
+  const [row] = await db
+    .insert(projectShares)
+    .values({
+      projectId: data.projectId,
+      displayName: data.displayName,
+      contactNote: data.contactNote ?? null,
+      tokenHash: data.tokenHash,
+      createdBy: data.createdBy,
+    })
+    .returning();
+  return row;
+}
+
+/** Busca um share ATIVO pelo hash do token (usado na redenção do link). */
+export async function getShareByTokenHash(tokenHash: string) {
+  const [row] = await db
+    .select()
+    .from(projectShares)
+    .where(
+      and(
+        eq(projectShares.tokenHash, tokenHash),
+        sql`${projectShares.revokedAt} is null`
+      )
+    );
+  return row ?? null;
+}
+
+/** Busca um share por id (usado na re-checagem de revogação por requisição). */
+export async function getShareById(id: string) {
+  const [row] = await db
+    .select()
+    .from(projectShares)
+    .where(eq(projectShares.id, id));
+  return row ?? null;
+}
+
+/** Lista os shares de um projeto (ativos e revogados), mais recentes primeiro. */
+export async function listSharesForProject(projectId: string) {
+  return db
+    .select()
+    .from(projectShares)
+    .where(eq(projectShares.projectId, projectId))
+    .orderBy(desc(projectShares.createdAt));
+}
+
+/** Revoga (soft-delete) um share. Retorna a linha atualizada (ou null). */
+export async function revokeShareRow(shareId: string) {
+  const [row] = await db
+    .update(projectShares)
+    .set({ revokedAt: new Date() })
+    .where(
+      and(
+        eq(projectShares.id, shareId),
+        sql`${projectShares.revokedAt} is null`
+      )
+    )
+    .returning();
   return row ?? null;
 }
 
@@ -181,55 +292,4 @@ export async function deleteProject(projectId: string): Promise<string[]> {
   // cascade remove os project_points automaticamente
   await db.delete(projects).where(eq(projects.id, projectId));
   return imgs.map((i) => i.url).filter((u): u is string => Boolean(u));
-}
-
-/* ── Template master (CRUD para /admin/template) ──────────── */
-export async function listTemplatePoints() {
-  return db
-    .select()
-    .from(templatePoints)
-    .orderBy(asc(templatePoints.displayOrder));
-}
-
-export async function addTemplatePoint(data: {
-  category: Category;
-  title: string;
-  subtitle?: string | null;
-  displayOrder: number;
-}) {
-  const [row] = await db.insert(templatePoints).values(data).returning();
-  return row;
-}
-
-export async function updateTemplatePoint(
-  id: string,
-  patch: Partial<{
-    category: Category;
-    title: string;
-    subtitle: string | null;
-    displayOrder: number;
-  }>
-) {
-  const [row] = await db
-    .update(templatePoints)
-    .set({ ...patch, updatedAt: new Date() })
-    .where(eq(templatePoints.id, id))
-    .returning();
-  return row ?? null;
-}
-
-export async function deleteTemplatePoint(id: string) {
-  await db.delete(templatePoints).where(eq(templatePoints.id, id));
-}
-
-/** Reordena vários pontos do template. */
-export async function reorderTemplatePoints(
-  orders: { id: string; displayOrder: number }[]
-) {
-  for (const o of orders) {
-    await db
-      .update(templatePoints)
-      .set({ displayOrder: o.displayOrder, updatedAt: new Date() })
-      .where(eq(templatePoints.id, o.id));
-  }
 }

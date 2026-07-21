@@ -1,9 +1,8 @@
 # QA Maker
 
 Ferramenta interna da **Agência FG** para auditorias de qualidade (QA) em lojas
-de e-commerce de clientes. A equipe escolhe um projeto (loja), percorre um
-checklist de pontos de QA, marca o status de cada um e anexa o print de erros
-encontrados.
+de e-commerce de clientes. A equipe cria um projeto (loja), adiciona pontos de QA
+por página, marca o status de cada um e anexa o print de erros encontrados.
 
 ## Stack
 
@@ -28,11 +27,10 @@ encontrados.
    cp .env.example .env.local
    ```
 
-3. Aplique o schema e popule o template-padrão no banco:
+3. Aplique o schema no banco:
 
    ```bash
    npm run db:migrate
-   npm run db:seed
    ```
 
 4. Rode o app:
@@ -64,14 +62,13 @@ No Google OAuth, cadastre a origem (`http://localhost:3000`) e o redirect URI
 | `npm test` | Testes unitários (vitest) |
 | `npm run db:generate` | Gera migração a partir do schema Drizzle |
 | `npm run db:migrate` | Aplica migrações pendentes |
-| `npm run db:seed` | Popula o template master (idempotente; `FORCE=1` recria) |
 | `npm run db:studio` | Drizzle Studio |
 
 ## Estrutura
 
 ```
-app/            rotas (projetos, projetos/[id], admin/template, login, api/*)
-components/     ui/ (primitivos) · layout/ · projects/ · points/ · admin/
+app/            rotas (projetos, projetos/[id], login, api/*)
+components/     ui/ (primitivos) · layout/ · projects/ · points/
 lib/            constants (status/progresso) · auth-domain · auth-guard · image · db/
 auth.config.ts  auth.ts  proxy.ts   (Auth.js + gate de domínio)
 drizzle/        migrações SQL

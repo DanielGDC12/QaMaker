@@ -32,6 +32,13 @@
   margin-bottom: 1.75rem;
 }
 
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
+}
+
 .empty {
   padding: 3rem 2rem;
   text-align: center;

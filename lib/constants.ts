@@ -39,7 +39,10 @@ export const SELECTABLE_STATUSES: readonly PointStatus[] = [
 
 /* ── Categorias (tags) dos pontos ─────────────────────────── */
 export const CATEGORIES = [
-  "PDP",
+  "Home",
+  "Categoria/Departamento",
+  "Produto",
+  "Prateleira",
   "Carrinho",
   "Checkout",
   "SEO",
