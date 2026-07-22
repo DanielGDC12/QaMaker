@@ -102,6 +102,8 @@
   font-weight: 600;
   color: var(--muted);
   margin-top: 0.75rem;
+  width: max-content;
+  margin-left: auto;
 }
 
 .tabsRow {
