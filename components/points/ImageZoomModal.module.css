@@ -1,0 +1,92 @@
+.dialog {
+  border: none;
+  border-radius: var(--radius);
+  padding: 0;
+  width: min(1100px, calc(100vw - 3rem));
+  height: min(800px, calc(100vh - 3rem));
+  box-shadow: var(--shadow-3);
+  background: var(--surface);
+}
+.dialog[open] {
+  /* o reset global zera o "margin: auto" que o navegador usa para
+     centralizar dialog:modal, então recriamos a centralização aqui */
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+}
+.dialog::backdrop {
+  background: rgba(52, 2, 4, 0.6);
+  backdrop-filter: blur(2px);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  flex: none;
+}
+
+.btn {
+  min-width: 2rem;
+  height: 2rem;
+  padding: 0 0.625rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--color-bordo);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+.btn:hover:not(:disabled) {
+  border-color: var(--color-pink);
+  color: var(--color-pink);
+}
+.btn:disabled {
+  color: var(--faint);
+  cursor: default;
+}
+
+.zoomLevel {
+  min-width: 3.25rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.close {
+  margin-left: auto;
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-md);
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+.close:hover {
+  background: var(--bordo-weak);
+  color: var(--color-bordo);
+}
+
+.viewport {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: none;
+}
+
+.image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  user-select: none;
+  transition: transform 0.05s linear;
+  will-change: transform;
+}
