@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { listProjectsWithProgress } from "@/lib/db/queries";
 import { ProjectRow } from "@/components/projects/ProjectRow";
 import { NewProjectButton } from "@/components/projects/NewProjectButton";
@@ -20,9 +19,6 @@ export default async function ProjetosPage() {
           <h1 className={styles.title}>Projetos</h1>
         </div>
         <div className={styles.headActions}>
-          <Link href="/admin/template" className={styles.templateLink}>
-            Editar template
-          </Link>
           <NewProjectButton />
         </div>
       </div>
@@ -32,8 +28,8 @@ export default async function ProjetosPage() {
           <div className={styles.emptyMark} aria-hidden />
           <h2 className={styles.emptyTitle}>Nenhum projeto ainda</h2>
           <p className={styles.emptyText}>
-            Crie o primeiro projeto para começar uma auditoria. O
-            checklist-padrão será copiado automaticamente.
+            Crie o primeiro projeto para começar uma auditoria. Depois é só
+            adicionar os pontos de QA de cada página.
           </p>
           <NewProjectButton />
         </div>

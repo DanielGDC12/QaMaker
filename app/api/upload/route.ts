@@ -1,28 +1,44 @@
 import { NextResponse } from "next/server";
 import { put } from "@vercel/blob";
-import { requireFGUser, AccessDeniedError } from "@/lib/auth-guard";
+import { requireProjectActor, AccessDeniedError } from "@/lib/auth-guard";
+import { getProjectPoint } from "@/lib/db/queries";
 import { validateImageFile } from "@/lib/image";
 
 export async function POST(request: Request) {
   try {
-    await requireFGUser(); // defesa em profundidade (proxy já protege)
-
     const form = await request.formData();
     const file = form.get("file");
     const projectId = String(form.get("projectId") ?? "");
     const pointId = String(form.get("pointId") ?? "");
 
-    if (!(file instanceof File)) {
-      return NextResponse.json(
-        { error: "Arquivo ausente." },
-        { status: 400 }
-      );
+    if (!projectId) {
+      return NextResponse.json({ error: "Projeto ausente." }, { status: 400 });
     }
-    if (!projectId || !pointId) {
-      return NextResponse.json(
-        { error: "Projeto/ponto ausente." },
-        { status: 400 }
-      );
+
+    // Autoriza FG OU ator externo do projeto (o proxy deixa /api/upload
+    // passar; a checagem real por projeto é aqui).
+    const actor = await requireProjectActor(projectId);
+
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: "Arquivo ausente." }, { status: 400 });
+    }
+
+    // Editando a imagem de um ponto EXISTENTE → aplica a mesma regra de posse
+    // do setPointImage. (Sem pointId = imagem de um ponto ainda não criado.)
+    if (pointId) {
+      const point = await getProjectPoint(pointId);
+      if (!point || point.projectId !== projectId) {
+        return NextResponse.json(
+          { error: "Ponto inválido." },
+          { status: 400 }
+        );
+      }
+      if (
+        actor.type === "external" &&
+        (!point.createdByIsExternal || point.createdBy !== actor.shareId)
+      ) {
+        throw new AccessDeniedError();
+      }
     }
 
     // Validação server-side (nunca confiar só no cliente).
@@ -32,7 +48,9 @@ export async function POST(request: Request) {
     }
 
     const ext = file.type.split("/")[1] ?? "bin";
-    const pathname = `projetos/${projectId}/pontos/${pointId}/${Date.now()}.${ext}`;
+    // Sem pointId (upload feito na criação do ponto) → segmento "novos".
+    const seg = pointId || "novos";
+    const pathname = `projetos/${projectId}/pontos/${seg}/${Date.now()}.${ext}`;
 
     const blob = await put(pathname, file, {
       access: "public",

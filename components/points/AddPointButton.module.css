@@ -1,0 +1,144 @@
+.dialog {
+  border: none;
+  border-radius: var(--radius);
+  padding: 0;
+  width: min(460px, calc(100vw - 2rem));
+  box-shadow: var(--shadow-3);
+  color: var(--text);
+}
+.dialog[open] {
+  /* o reset global zera o "margin: auto" que o navegador usa para
+     centralizar dialog:modal, então recriamos a centralização aqui */
+  position: fixed;
+  inset: 0;
+  margin: auto;
+}
+.dialog::backdrop {
+  background: rgba(52, 2, 4, 0.38);
+  backdrop-filter: blur(2px);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  padding: 1.75rem;
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-bordo);
+}
+
+.sub {
+  margin-top: 0.375rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+}
+
+.label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-top: 0.875rem;
+  margin-bottom: 0.375rem;
+}
+.optional {
+  font-weight: 500;
+  color: var(--faint);
+}
+
+.input {
+  height: 2.625rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9375rem;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+.input:focus {
+  outline: none;
+  border-color: var(--color-pink);
+  box-shadow: 0 0 0 3px var(--pink-weak);
+}
+select.input {
+  appearance: none;
+  cursor: pointer;
+}
+
+.drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 5.5rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.14s ease, background 0.14s ease, color 0.14s ease;
+}
+.drop:hover:not(:disabled),
+.dropActive {
+  border-color: var(--color-pink);
+  color: var(--color-bordo);
+  background: var(--pink-weak);
+}
+.drop:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.dropText {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.imgPreview {
+  position: relative;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.thumb {
+  display: block;
+  width: 100%;
+  max-height: 12rem;
+  object-fit: contain;
+  background: var(--surface);
+}
+.imgRemove {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(52, 2, 4, 0.72);
+  cursor: pointer;
+}
+.imgRemove:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.err {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-vermelho);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.625rem;
+  margin-top: 1.5rem;
+}

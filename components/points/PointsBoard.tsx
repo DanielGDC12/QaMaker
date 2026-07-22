@@ -4,33 +4,61 @@ import { useOptimistic, startTransition, useState } from "react";
 import { ProgressBar } from "@/components/ui";
 import { PointCard } from "./PointCard";
 import { Toast } from "@/components/ui/Toast";
-import { calcProgress, type PointStatus } from "@/lib/constants";
-import type { ProjectPoint } from "@/lib/db/schema";
-import { updatePointStatus } from "@/app/projetos/[id]/actions";
+import { calcProgress, CATEGORIES, type PointStatus } from "@/lib/constants";
+import type { ProjectPointWithActor } from "@/lib/db/queries";
+import { updatePointStatus, deletePoint } from "@/app/projetos/[id]/actions";
 import styles from "./PointsBoard.module.css";
 
 interface Props {
   projectId: string;
-  initialPoints: ProjectPoint[];
+  initialPoints: ProjectPointWithActor[];
+  viewerType: "fg" | "external";
+  /** share.id do visitante externo (para decidir posse); null se FG. */
+  currentShareId: string | null;
 }
 
-type Patch = { id: string; status: PointStatus };
+type Action =
+  | { type: "status"; id: string; status: PointStatus }
+  | { type: "delete"; id: string };
 
-export function PointsBoard({ projectId, initialPoints }: Props) {
-  const [points, setOptimistic] = useOptimistic(
+/** Índice da página na ordem canônica; desconhecidas vão para o fim. */
+function catOrder(cat: string) {
+  const i = CATEGORIES.indexOf(cat as (typeof CATEGORIES)[number]);
+  return i === -1 ? CATEGORIES.length : i;
+}
+
+export function PointsBoard({
+  projectId,
+  initialPoints,
+  viewerType,
+  currentShareId,
+}: Props) {
+  const [points, applyOptimistic] = useOptimistic(
     initialPoints,
-    (state: ProjectPoint[], patch: Patch) =>
-      state.map((p) => (p.id === patch.id ? { ...p, status: patch.status } : p))
+    (state: ProjectPointWithActor[], action: Action) =>
+      action.type === "delete"
+        ? state.filter((p) => p.id !== action.id)
+        : state.map((p) =>
+            p.id === action.id ? { ...p, status: action.status } : p
+          )
   );
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const { pct, done, total } = calcProgress(points);
 
+  // Agrupa por página (categoria) na ordem canônica; dentro de cada página,
+  // mantém a ordem de criação (display_order).
+  const ordered = [...points].sort(
+    (a, b) =>
+      catOrder(a.category) - catOrder(b.category) ||
+      a.displayOrder - b.displayOrder
+  );
+
   function changeStatus(pointId: string, status: PointStatus) {
     setError(null);
     startTransition(async () => {
-      setOptimistic({ id: pointId, status });
+      applyOptimistic({ type: "status", id: pointId, status });
       setPendingId(pointId);
       try {
         await updatePointStatus(projectId, pointId, status);
@@ -42,7 +70,18 @@ export function PointsBoard({ projectId, initialPoints }: Props) {
     });
   }
 
-  // Agrupa por categoria mantendo a ordem; numeração global por display_order.
+  function removePoint(pointId: string) {
+    setError(null);
+    startTransition(async () => {
+      applyOptimistic({ type: "delete", id: pointId });
+      try {
+        await deletePoint(projectId, pointId);
+      } catch {
+        setError("Não foi possível excluir. Tente novamente.");
+      }
+    });
+  }
+
   return (
     <>
       <header className={styles.head}>
@@ -56,9 +95,14 @@ export function PointsBoard({ projectId, initialPoints }: Props) {
       </header>
 
       <div className={styles.list}>
-        {points.map((point, i) => {
+        {ordered.map((point, i) => {
           const showCategory =
-            i === 0 || points[i - 1].category !== point.category;
+            i === 0 || ordered[i - 1].category !== point.category;
+          // FG age em tudo; externo só nos pontos que ele mesmo criou.
+          const isOwnPoint =
+            viewerType === "fg"
+              ? true
+              : point.createdByIsExternal && point.createdBy === currentShareId;
           return (
             <div key={point.id}>
               {showCategory && (
@@ -68,7 +112,10 @@ export function PointsBoard({ projectId, initialPoints }: Props) {
                 point={point}
                 number={i + 1}
                 pending={pendingId === point.id}
+                viewerType={viewerType}
+                isOwnPoint={isOwnPoint}
                 onStatusChange={(status) => changeStatus(point.id, status)}
+                onDelete={() => removePoint(point.id)}
               />
             </div>
           );

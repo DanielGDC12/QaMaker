@@ -45,7 +45,8 @@ export function NewProjectButton() {
         <form action={formAction} className={styles.form}>
           <h2 className={styles.title}>Novo projeto</h2>
           <p className={styles.sub}>
-            Os pontos do checklist-padrão serão copiados para este projeto.
+            O projeto começa vazio. Você adiciona os pontos de QA depois, na
+            página do projeto.
           </p>
 
           <label className={styles.label} htmlFor="project-name">

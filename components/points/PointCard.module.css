@@ -24,6 +24,55 @@
   gap: 0.625rem;
   margin-bottom: 0.125rem;
 }
+
+/* Botão de excluir ponto — discreto, revela confirmação inline. */
+.del {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: var(--radius-sm);
+  color: var(--faint);
+  transition: color 0.14s ease, background 0.14s ease;
+}
+.del:hover {
+  color: var(--color-vermelho);
+  background: rgba(106, 11, 17, 0.08);
+}
+
+.confirm {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.confirmLabel {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.confirmYes,
+.confirmNo {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: background 0.14s ease, color 0.14s ease;
+}
+.confirmYes {
+  color: var(--color-vermelho);
+}
+.confirmYes:hover {
+  background: rgba(106, 11, 17, 0.08);
+}
+.confirmNo {
+  color: var(--muted);
+}
+.confirmNo:hover {
+  color: var(--text);
+}
 .num {
   font-size: 0.75rem;
   font-weight: 700;
@@ -38,6 +87,18 @@
   color: var(--color-vermelho);
   background: rgba(106, 11, 17, 0.08);
   padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-pill);
+}
+/* Selo interno da FG p/ pontos criados pelo cliente. O externo nunca o vê. */
+.qaCliente {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-pink);
+  background: var(--pink-weak);
+  border: 1px solid var(--color-pink);
+  padding: 0.15rem 0.45rem;
   border-radius: var(--radius-pill);
 }
 
@@ -64,4 +125,20 @@
   font-size: 0.6875rem;
   color: var(--faint);
   font-weight: 500;
+}
+
+/* Status estático (somente leitura, visitante externo em ponto de terceiro). */
+.statusStatic {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.statusDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  flex-shrink: 0;
 }

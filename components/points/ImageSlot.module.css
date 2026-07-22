@@ -30,6 +30,14 @@
   background: var(--pink-weak);
   color: var(--color-pink);
 }
+/* Placeholder estático (somente leitura) — sem hover/interação. */
+.readOnly {
+  cursor: default;
+}
+.readOnly:hover {
+  border-color: var(--border);
+  color: var(--faint);
+}
 .dropText {
   font-size: 0.625rem;
   font-weight: 600;

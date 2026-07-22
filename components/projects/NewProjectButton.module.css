@@ -6,6 +6,13 @@
   box-shadow: var(--shadow-3);
   color: var(--text);
 }
+.dialog[open] {
+  /* o reset global zera o "margin: auto" que o navegador usa para
+     centralizar dialog:modal, então recriamos a centralização aqui */
+  position: fixed;
+  inset: 0;
+  margin: auto;
+}
 .dialog::backdrop {
   background: rgba(52, 2, 4, 0.38);
   backdrop-filter: blur(2px);
