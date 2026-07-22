@@ -1,0 +1,124 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ── Formulário de criação ─────────────────────────────────── */
+.form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+}
+
+.label {
+  display: block;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-bordo);
+  margin-bottom: 0.5rem;
+}
+
+.formRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  background: var(--bg, #fff);
+  color: inherit;
+}
+.input:focus {
+  outline: 2px solid var(--color-pink);
+  outline-offset: 1px;
+}
+
+.err {
+  margin-top: 0.5rem;
+  color: var(--color-bordo);
+  font-size: 0.8125rem;
+}
+
+/* ── Token recém-revelado ──────────────────────────────────── */
+.reveal {
+  background: var(--pink-weak);
+  border: 1px solid var(--pink-weak-2);
+  border-radius: var(--radius);
+  padding: 1rem 1.25rem;
+}
+.revealTitle {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--color-bordo);
+  margin-bottom: 0.625rem;
+}
+.revealRow {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+.code {
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.8125rem;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* ── Lista de tokens ativos ────────────────────────────────── */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.listTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--color-bordo);
+}
+.empty {
+  color: var(--muted);
+  font-size: 0.875rem;
+  padding: 1rem 0;
+}
+.ul {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.875rem 1.125rem;
+}
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.name {
+  font-weight: 600;
+  color: var(--color-bordo);
+  font-size: 0.9375rem;
+}
+.dates {
+  font-size: 0.75rem;
+  color: var(--muted);
+}

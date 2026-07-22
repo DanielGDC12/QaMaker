@@ -15,6 +15,12 @@ export default auth((req) => {
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
   const isApi = pathname.startsWith("/api/");
 
+  // Endpoints da extensão: autenticam por token (não por cookie de sessão).
+  // O próprio route handler valida via requireApiToken — o proxy não intervém.
+  if (pathname.startsWith("/api/ext")) {
+    return NextResponse.next();
+  }
+
   // Rotas de API: nunca redireciona — responde 401 em JSON.
   if (isApi) {
     if (!isFG) {

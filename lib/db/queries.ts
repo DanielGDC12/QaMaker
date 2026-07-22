@@ -1,10 +1,11 @@
-import { eq, asc, desc, sql, and } from "drizzle-orm";
+import { eq, asc, desc, sql, and, isNull } from "drizzle-orm";
 import { db } from "./index";
 import {
   projects,
   projectPoints,
   templatePoints,
   users,
+  apiTokens,
 } from "./schema";
 import type { PointStatus, Category } from "@/lib/constants";
 
@@ -232,4 +233,113 @@ export async function reorderTemplatePoints(
       .set({ displayOrder: o.displayOrder, updatedAt: new Date() })
       .where(eq(templatePoints.id, o.id));
   }
+}
+
+/* ── Extensão: lista enxuta de projetos + criação de card ─── */
+
+/** Lista simples de projetos (id + nome) para o seletor da extensão. */
+export async function listProjectsBasic(): Promise<
+  { id: string; name: string }[]
+> {
+  return db
+    .select({ id: projects.id, name: projects.name })
+    .from(projects)
+    .orderBy(desc(projects.createdAt));
+}
+
+/** Próximo displayOrder livre em um projeto (append no fim da lista). */
+export async function nextDisplayOrder(projectId: string): Promise<number> {
+  const [row] = await db
+    .select({ max: sql<number>`coalesce(max(${projectPoints.displayOrder}), -1)` })
+    .from(projectPoints)
+    .where(eq(projectPoints.projectId, projectId));
+  return Number(row?.max ?? -1) + 1;
+}
+
+/**
+ * Cria um ponto manual (card da extensão) já com imagem e descrição.
+ * `templatePointId` fica nulo — é um ponto sem origem no template.
+ */
+export async function createExtensionCard(
+  projectId: string,
+  data: {
+    category: Category;
+    title: string;
+    notes: string | null;
+    errorImageUrl: string;
+  },
+  createdBy: string
+) {
+  const displayOrder = await nextDisplayOrder(projectId);
+  const [row] = await db
+    .insert(projectPoints)
+    .values({
+      projectId,
+      templatePointId: null,
+      category: data.category,
+      title: data.title,
+      subtitle: null,
+      displayOrder,
+      status: "pendente",
+      errorImageUrl: data.errorImageUrl,
+      notes: data.notes,
+      updatedBy: createdBy,
+    })
+    .returning();
+  return row;
+}
+
+/* ── Tokens de API (autenticação da extensão) ─────────────── */
+
+/** Persiste um novo token (recebe já o hash) e retorna o registro. */
+export async function createApiToken(data: {
+  email: string;
+  tokenHash: string;
+  label: string;
+}) {
+  const [row] = await db.insert(apiTokens).values(data).returning();
+  return row;
+}
+
+/** Tokens ativos de um usuário (revogados ficam de fora). */
+export async function listApiTokens(email: string) {
+  return db
+    .select({
+      id: apiTokens.id,
+      label: apiTokens.label,
+      createdAt: apiTokens.createdAt,
+      lastUsedAt: apiTokens.lastUsedAt,
+    })
+    .from(apiTokens)
+    .where(and(eq(apiTokens.email, email), isNull(apiTokens.revokedAt)))
+    .orderBy(desc(apiTokens.createdAt));
+}
+
+/** Marca um token como revogado (só o dono pode revogar o próprio). */
+export async function revokeApiToken(id: string, email: string) {
+  await db
+    .update(apiTokens)
+    .set({ revokedAt: new Date() })
+    .where(and(eq(apiTokens.id, id), eq(apiTokens.email, email)));
+}
+
+/**
+ * Resolve um token (por hash) para o e-mail do dono, se válido e não revogado.
+ * Atualiza `lastUsedAt` (best-effort) e retorna o e-mail, ou null.
+ */
+export async function resolveApiToken(tokenHash: string): Promise<string | null> {
+  const [row] = await db
+    .select({ id: apiTokens.id, email: apiTokens.email })
+    .from(apiTokens)
+    .where(and(eq(apiTokens.tokenHash, tokenHash), isNull(apiTokens.revokedAt)));
+  if (!row) return null;
+  try {
+    await db
+      .update(apiTokens)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(apiTokens.id, row.id));
+  } catch {
+    // atualização de telemetria não deve derrubar a autenticação
+  }
+  return row.email;
 }
