@@ -1,10 +1,7 @@
 import { requireApiToken } from "@/lib/api-guard";
 import { AccessDeniedError } from "@/lib/auth-guard";
 import { corsJson, corsPreflight } from "@/lib/api-cors";
-import {
-  listProjectsBasic,
-  createProjectFromTemplate,
-} from "@/lib/db/queries";
+import { listProjectsBasic, createProject } from "@/lib/db/queries";
 
 export const runtime = "nodejs";
 
@@ -40,7 +37,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const id = await createProjectFromTemplate(name, caller.email);
+    const id = await createProject(name, caller.email);
     return corsJson({ project: { id, name } }, { status: 201 });
   } catch (err) {
     return handleError(err);

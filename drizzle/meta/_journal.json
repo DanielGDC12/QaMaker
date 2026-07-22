@@ -12,10 +12,6 @@
     {
       "idx": 1,
       "version": "7",
-<<<<<<< HEAD
-      "when": 1784748978805,
-      "tag": "0001_secret_unicorn",
-=======
       "when": 1784045151685,
       "tag": "0001_magical_doorman",
       "breakpoints": true
@@ -25,7 +21,13 @@
       "version": "7",
       "when": 1784208379031,
       "tag": "0002_next_mentor",
->>>>>>> ef3c56f80115ff454400d4a8a84274a4d8171225
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1784751353394,
+      "tag": "0003_dusty_ravenous",
       "breakpoints": true
     }
   ]

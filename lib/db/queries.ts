@@ -1,19 +1,13 @@
-<<<<<<< HEAD
 import { eq, asc, desc, sql, and, isNull } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { db } from "./index";
 import {
   projects,
   projectPoints,
-  templatePoints,
+  projectShares,
   users,
   apiTokens,
 } from "./schema";
-=======
-import { eq, asc, desc, sql, and } from "drizzle-orm";
-import { alias } from "drizzle-orm/pg-core";
-import { db } from "./index";
-import { projects, projectPoints, projectShares, users } from "./schema";
->>>>>>> ef3c56f80115ff454400d4a8a84274a4d8171225
 import type { PointStatus, Category } from "@/lib/constants";
 import type { Actor } from "@/lib/auth-guard";
 
@@ -305,58 +299,6 @@ export async function deleteProject(projectId: string): Promise<string[]> {
   await db.delete(projects).where(eq(projects.id, projectId));
   return imgs.map((i) => i.url).filter((u): u is string => Boolean(u));
 }
-<<<<<<< HEAD
-
-/* ── Template master (CRUD para /admin/template) ──────────── */
-export async function listTemplatePoints() {
-  return db
-    .select()
-    .from(templatePoints)
-    .orderBy(asc(templatePoints.displayOrder));
-}
-
-export async function addTemplatePoint(data: {
-  category: Category;
-  title: string;
-  subtitle?: string | null;
-  displayOrder: number;
-}) {
-  const [row] = await db.insert(templatePoints).values(data).returning();
-  return row;
-}
-
-export async function updateTemplatePoint(
-  id: string,
-  patch: Partial<{
-    category: Category;
-    title: string;
-    subtitle: string | null;
-    displayOrder: number;
-  }>
-) {
-  const [row] = await db
-    .update(templatePoints)
-    .set({ ...patch, updatedAt: new Date() })
-    .where(eq(templatePoints.id, id))
-    .returning();
-  return row ?? null;
-}
-
-export async function deleteTemplatePoint(id: string) {
-  await db.delete(templatePoints).where(eq(templatePoints.id, id));
-}
-
-/** Reordena vários pontos do template. */
-export async function reorderTemplatePoints(
-  orders: { id: string; displayOrder: number }[]
-) {
-  for (const o of orders) {
-    await db
-      .update(templatePoints)
-      .set({ displayOrder: o.displayOrder, updatedAt: new Date() })
-      .where(eq(templatePoints.id, o.id));
-  }
-}
 
 /* ── Extensão: lista enxuta de projetos + criação de card ─── */
 
@@ -381,7 +323,7 @@ export async function nextDisplayOrder(projectId: string): Promise<number> {
 
 /**
  * Cria um ponto manual (card da extensão) já com imagem e descrição.
- * `templatePointId` fica nulo — é um ponto sem origem no template.
+ * O autor é sempre um usuário FG (dono do token), logo `isExternal` = false.
  */
 export async function createExtensionCard(
   projectId: string,
@@ -398,7 +340,6 @@ export async function createExtensionCard(
     .insert(projectPoints)
     .values({
       projectId,
-      templatePointId: null,
       category: data.category,
       title: data.title,
       subtitle: null,
@@ -406,6 +347,8 @@ export async function createExtensionCard(
       status: "pendente",
       errorImageUrl: data.errorImageUrl,
       notes: data.notes,
+      createdBy,
+      createdByIsExternal: false,
       updatedBy: createdBy,
     })
     .returning();
@@ -466,5 +409,3 @@ export async function resolveApiToken(tokenHash: string): Promise<string | null>
   }
   return row.email;
 }
-=======
->>>>>>> ef3c56f80115ff454400d4a8a84274a4d8171225
