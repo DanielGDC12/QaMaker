@@ -1,6 +1,6 @@
 .head {
-  margin-bottom: 2rem;
-  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  padding: 1.125rem 1.5rem;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -8,12 +8,19 @@
 }
 .headRow {
   display: flex;
-  align-items: baseline;
-  gap: 0.875rem;
-  margin-bottom: 0.875rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
 }
 .bigPct {
-  font-size: 2.25rem;
+  font-size: 1.625rem;
   font-weight: 700;
   color: var(--color-bordo);
   line-height: 1;
@@ -23,6 +30,10 @@
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--muted);
+  white-space: nowrap;
+}
+.barTrack {
+  width: 9rem;
 }
 
 .list {
@@ -31,16 +42,158 @@
   gap: 0.75rem;
 }
 
-.category {
-  font-size: 0.6875rem;
+.searchWrap {
+  position: relative;
+  flex: 1;
+  max-width: 22rem;
+}
+
+.searchIcon {
+  position: absolute;
+  top: 50%;
+  left: 0.875rem;
+  transform: translateY(-50%);
+  color: var(--faint);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 2.375rem;
+  padding: 0 2.5rem 0 2.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+.searchInput:focus {
+  outline: none;
+  border-color: var(--color-pink);
+  box-shadow: 0 0 0 3px var(--pink-weak);
+}
+
+.searchClear {
+  position: absolute;
+  top: 50%;
+  right: 0.625rem;
+  transform: translateY(-50%);
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 50%;
+}
+.searchClear:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.searchInfo {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-top: 0.75rem;
+}
+
+.tabsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.75rem;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--muted);
-  margin: 1.25rem 0 0.625rem;
-  padding-bottom: 0.375rem;
-  border-bottom: 1px solid var(--border);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.375rem 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
-.list > div:first-child .category {
-  margin-top: 0;
+
+.tab:hover {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+.tabActive {
+  color: var(--color-bordo);
+  border-color: var(--color-bordo);
+  background: var(--bordo-weak);
+}
+
+.tabCount {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  color: inherit;
+  opacity: 0.7;
+}
+
+.tabsDisabled {
+  opacity: 0.5;
+}
+.tabsDisabled .tab {
+  cursor: not-allowed;
+}
+
+.statusFilterWrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 2.25rem;
+  padding: 0 1.75rem 0 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+.statusFilterWrap:focus-within {
+  border-color: var(--color-pink);
+  box-shadow: 0 0 0 3px var(--pink-weak);
+}
+
+.statusFilterSelect {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  outline: none;
+}
+
+.statusFilterCaret {
+  position: absolute;
+  right: 0.625rem;
+  color: var(--faint);
+  pointer-events: none;
 }

@@ -35,7 +35,6 @@ export function DeleteProjectButton({
     <>
       <Button
         variant="danger"
-        size="sm"
         onClick={() => dialogRef.current?.showModal()}
       >
         Excluir projeto
