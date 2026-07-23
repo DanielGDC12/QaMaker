@@ -23,10 +23,10 @@ describe("validateImageFile", () => {
     );
   });
 
-  it("rejeita arquivo acima de 5 MB", () => {
+  it("rejeita arquivo acima de 2 MB", () => {
     const r = validateImageFile({ type: "image/png", size: MAX_IMAGE_BYTES + 1 });
     expect(r.ok).toBe(false);
-    if (!r.ok) expect(r.error).toMatch(/5 MB/);
+    if (!r.ok) expect(r.error).toMatch(/2 MB/);
   });
 
   it("aceita exatamente no limite", () => {

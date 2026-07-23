@@ -1,6 +1,6 @@
 /** Regras de validação de imagem — compartilhadas cliente e servidor. */
 
-export const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+export const MAX_IMAGE_BYTES = 2 * 1024 * 1024; // 2 MB
 export const ACCEPTED_IMAGE_TYPES = [
   "image/jpeg",
   "image/png",
@@ -16,7 +16,7 @@ export function validateImageFile(
     return { ok: false, error: "Apenas JPEG, PNG e WebP são aceitos." };
   }
   if (file.size > MAX_IMAGE_BYTES) {
-    return { ok: false, error: "Imagem deve ter no máximo 5 MB." };
+    return { ok: false, error: "Imagem deve ter no máximo 2 MB." };
   }
   return { ok: true };
 }

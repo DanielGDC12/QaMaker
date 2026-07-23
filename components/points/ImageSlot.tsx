@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { ACCEPT_ATTR, validateImageFile } from "@/lib/image";
 import { setPointImage } from "@/app/projetos/[id]/actions";
+import { ImageZoomModal } from "./ImageZoomModal";
 import styles from "./ImageSlot.module.css";
 
 interface Props {
@@ -23,6 +24,7 @@ export function ImageSlot({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
+  const [zoomOpen, setZoomOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Modo leitura: mostra só a imagem (ou um placeholder), sem interação.
@@ -31,7 +33,19 @@ export function ImageSlot({
       return (
         <div className={styles.slot}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={url} alt="Print do erro" className={styles.preview} />
+          <img
+            src={url}
+            alt="Print do erro"
+            className={styles.preview}
+            onClick={() => setZoomOpen(true)}
+            style={{ cursor: "zoom-in" }}
+          />
+          <ImageZoomModal
+            url={url}
+            alt="Print do erro"
+            open={zoomOpen}
+            onClose={() => setZoomOpen(false)}
+          />
         </div>
       );
     }
@@ -102,7 +116,13 @@ export function ImageSlot({
     return (
       <div className={styles.slot}>
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={url} alt="Print do erro" className={styles.preview} />
+        <img
+          src={url}
+          alt="Print do erro"
+          className={styles.preview}
+          onClick={() => !busy && setZoomOpen(true)}
+          style={{ cursor: busy ? "default" : "zoom-in" }}
+        />
         {busy && <div className={styles.busy}>Enviando…</div>}
         <button
           type="button"
@@ -114,6 +134,12 @@ export function ImageSlot({
           Remover
         </button>
         {error && <p className={styles.error}>{error}</p>}
+        <ImageZoomModal
+          url={url}
+          alt="Print do erro"
+          open={zoomOpen}
+          onClose={() => setZoomOpen(false)}
+        />
       </div>
     );
   }
