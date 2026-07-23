@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type DragEvent } from "react";
 import { StatusDropdown } from "./StatusDropdown";
 import { ImageSlot } from "./ImageSlot";
 import { POINT_STATUS_META, type PointStatus } from "@/lib/constants";
@@ -14,6 +14,12 @@ interface Props {
   viewerType: "fg" | "external";
   /** true se o visitante pode editar/excluir este ponto (FG, ou dono externo). */
   isOwnPoint: boolean;
+  /** Habilita arrastar o card entre colunas (Kanban). */
+  canDrag?: boolean;
+  /** Card em arraste (feedback visual). */
+  dragging?: boolean;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
   onStatusChange: (status: PointStatus) => void;
   onDelete: () => void;
 }
@@ -36,10 +42,25 @@ export function PointCard({
   pending,
   viewerType,
   isOwnPoint,
+  canDrag = false,
+  dragging = false,
+  onDragStart,
+  onDragEnd,
   onStatusChange,
   onDelete,
 }: Props) {
   const [confirming, setConfirming] = useState(false);
+
+  // O arraste do card só inicia a partir do "corpo": controles interativos
+  // (imagem, status, excluir) são marcados com data-no-drag e cancelam o drag.
+  function handleDragStart(e: DragEvent<HTMLElement>) {
+    if ((e.target as HTMLElement).closest("[data-no-drag]")) {
+      e.preventDefault();
+      return;
+    }
+    e.dataTransfer.effectAllowed = "move";
+    onDragStart?.();
+  }
 
   // Somente leitura: externo vendo um ponto que NÃO é dele.
   const readOnly = viewerType === "external" && !isOwnPoint;
@@ -51,13 +72,22 @@ export function PointCard({
   const statusMeta = POINT_STATUS_META[point.status];
 
   return (
-    <article className={styles.card}>
-      <ImageSlot
-        projectId={point.projectId}
-        pointId={point.id}
-        initialUrl={point.errorImageUrl}
-        readOnly={readOnly}
-      />
+    <article
+      className={`${styles.card} ${canDrag ? styles.draggable : ""} ${
+        dragging ? styles.dragging : ""
+      }`}
+      draggable={canDrag}
+      onDragStart={canDrag ? handleDragStart : undefined}
+      onDragEnd={canDrag ? onDragEnd : undefined}
+    >
+      <div data-no-drag className={styles.thumb}>
+        <ImageSlot
+          projectId={point.projectId}
+          pointId={point.id}
+          initialUrl={point.errorImageUrl}
+          readOnly={readOnly}
+        />
+      </div>
 
       <div className={styles.body}>
         <div className={styles.meta}>
@@ -70,7 +100,7 @@ export function PointCard({
           )}
 
           {readOnly ? null : confirming ? (
-            <span className={styles.confirm}>
+            <span className={styles.confirm} data-no-drag>
               <span className={styles.confirmLabel}>Excluir este ponto?</span>
               <button
                 type="button"
@@ -91,6 +121,7 @@ export function PointCard({
             <button
               type="button"
               className={styles.del}
+              data-no-drag
               onClick={() => setConfirming(true)}
               aria-label="Excluir ponto"
               title="Excluir ponto"
@@ -116,7 +147,7 @@ export function PointCard({
         )}
       </div>
 
-      <div className={styles.status}>
+      <div className={styles.status} data-no-drag>
         {readOnly ? (
           <span className={styles.statusStatic} style={{ color: statusMeta.color }}>
             <span

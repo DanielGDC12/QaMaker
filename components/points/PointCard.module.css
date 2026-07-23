@@ -1,27 +1,47 @@
 .card {
   display: flex;
-  align-items: flex-start;
-  gap: 1.25rem;
-  padding: 1.25rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.875rem;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
-  box-shadow: var(--shadow-1);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s ease, transform 0.15s ease,
+    border-color 0.15s ease, opacity 0.15s ease;
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* Kanban: card arrastável */
+.draggable {
+  cursor: grab;
+}
+.draggable:active {
+  cursor: grabbing;
+}
+.dragging {
+  opacity: 0.5;
+  box-shadow: var(--shadow-md);
+}
+
+/* Thumbnail (print do erro) ocupa a largura do card */
+.thumb {
+  width: 100%;
 }
 
 .body {
-  flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.3rem;
-  padding-top: 0.125rem;
 }
 
 .meta {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.5rem;
   margin-bottom: 0.125rem;
 }
 
@@ -34,11 +54,11 @@
   width: 1.75rem;
   height: 1.75rem;
   border-radius: var(--radius-sm);
-  color: var(--faint);
+  color: var(--fg-gray-400);
   transition: color 0.14s ease, background 0.14s ease;
 }
 .del:hover {
-  color: var(--color-vermelho);
+  color: var(--fg-vermelho);
   background: rgba(106, 11, 17, 0.08);
 }
 
@@ -62,7 +82,7 @@
   transition: background 0.14s ease, color 0.14s ease;
 }
 .confirmYes {
-  color: var(--color-vermelho);
+  color: var(--fg-vermelho);
 }
 .confirmYes:hover {
   background: rgba(106, 11, 17, 0.08);
@@ -73,18 +93,20 @@
 .confirmNo:hover {
   color: var(--text);
 }
+
 .num {
   font-size: 0.75rem;
   font-weight: 700;
-  color: var(--faint);
+  color: var(--fg-gray-400);
   font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 .tag {
   font-size: 0.625rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-vermelho);
+  color: var(--fg-vermelho);
   background: rgba(106, 11, 17, 0.08);
   padding: 0.2rem 0.5rem;
   border-radius: var(--radius-pill);
@@ -95,36 +117,38 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--color-pink);
+  color: var(--fg-rosa);
   background: var(--pink-weak);
-  border: 1px solid var(--color-pink);
+  border: 1px solid var(--fg-rosa);
   padding: 0.15rem 0.45rem;
   border-radius: var(--radius-pill);
 }
 
 .title {
   font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--color-bordo);
-  line-height: 1.35;
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-snug);
+  color: var(--fg-bordo-ink);
+  line-height: var(--lh-snug);
 }
 .subtitle {
   font-size: 0.8125rem;
-  color: var(--muted);
-  line-height: 1.45;
-  max-width: 60ch;
-}
-
-.status {
-  flex-shrink: 0;
-  padding-top: 0.125rem;
+  color: var(--fg-cinza);
+  line-height: var(--lh-body);
+  text-wrap: pretty;
 }
 
 .audit {
   margin-top: 0.375rem;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--border-subtle);
   font-size: 0.6875rem;
-  color: var(--faint);
+  color: var(--fg-placeholder);
   font-weight: 500;
+}
+
+.status {
+  padding-top: 0.125rem;
 }
 
 /* Status estático (somente leitura, visitante externo em ponto de terceiro). */
