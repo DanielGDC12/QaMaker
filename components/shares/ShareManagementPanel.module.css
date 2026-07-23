@@ -1,32 +1,7 @@
-.panel {
-  margin-bottom: 2rem;
-  padding: 1.25rem 1.5rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-1);
-}
-
-.head {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-}
-.title {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--color-bordo);
-}
-.sub {
-  margin-top: 0.25rem;
-  font-size: 0.8125rem;
-  color: var(--muted);
-  max-width: 60ch;
-}
-
 .list {
   margin-top: 1rem;
+  max-height: 11rem;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -146,6 +121,18 @@
   margin-bottom: 0.5rem;
   font-size: 0.8125rem;
   color: var(--muted);
+}
+.subForm {
+  display: flex;
+  flex-direction: column;
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+.subFormTitle {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--text);
 }
 .label {
   font-size: 0.75rem;

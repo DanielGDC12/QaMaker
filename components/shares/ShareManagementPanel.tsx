@@ -101,28 +101,10 @@ export function ShareManagementPanel({ projectId, shares }: Props) {
   }, [pending]);
 
   return (
-    <section className={styles.panel}>
-      <div className={styles.head}>
-        <div>
-          <h2 className={styles.title}>Acessos do cliente</h2>
-          <p className={styles.sub}>
-            {active.length === 0
-              ? "Nenhum acesso externo ativo. Gere um link para o cliente reportar pontos."
-              : `${active.length} acesso(s) ativo(s). O cliente vê e cria apenas pontos de QA do cliente.`}
-          </p>
-        </div>
-        <Button variant="secondary" size="sm" onClick={open}>
-          Novo acesso
-        </Button>
-      </div>
-
-      {shares.length > 0 && (
-        <ul className={styles.list}>
-          {shares.map((s) => (
-            <ShareRow key={s.id} projectId={projectId} share={s} />
-          ))}
-        </ul>
-      )}
+    <>
+      <Button variant="secondary" onClick={open}>
+        Acessos do cliente{active.length > 0 ? ` (${active.length})` : ""}
+      </Button>
 
       <dialog ref={dialogRef} className={styles.dialog}>
         {created ? (
@@ -145,56 +127,74 @@ export function ShareManagementPanel({ projectId, shares }: Props) {
             </div>
           </div>
         ) : (
-          <form ref={formRef} onSubmit={handleSubmit} className={styles.form}>
-            <h3 className={styles.dialogTitle}>Novo acesso do cliente</h3>
+          <div className={styles.form}>
+            <h3 className={styles.dialogTitle}>Acessos do cliente</h3>
             <p className={styles.dialogSub}>
-              Gera um link único para uma pessoa externa acessar só este
-              projeto, sem login.
+              {active.length === 0
+                ? "Nenhum acesso externo ativo. Gere um link para o cliente reportar pontos."
+                : `${active.length} acesso(s) ativo(s). O cliente vê e cria apenas pontos de QA do cliente.`}
             </p>
 
-            <label className={styles.label} htmlFor="share-name">
-              Nome / identificação
-            </label>
-            <input
-              id="share-name"
-              name="displayName"
-              className={styles.input}
-              placeholder="Ex.: João — Loja Centro"
-              maxLength={120}
-              autoComplete="off"
-            />
+            {shares.length > 0 && (
+              <ul className={styles.list}>
+                {shares.map((s) => (
+                  <ShareRow key={s.id} projectId={projectId} share={s} />
+                ))}
+              </ul>
+            )}
 
-            <label className={styles.label} htmlFor="share-note">
-              Observação <span className={styles.optional}>(opcional, interna)</span>
-            </label>
-            <input
-              id="share-note"
-              name="contactNote"
-              className={styles.input}
-              placeholder="Ex.: e-mail/telefone de contato"
-              maxLength={300}
-              autoComplete="off"
-            />
+            <form
+              ref={formRef}
+              onSubmit={handleSubmit}
+              className={styles.subForm}
+            >
+              <h4 className={styles.subFormTitle}>Novo acesso</h4>
 
-            {error && <p className={styles.err}>{error}</p>}
+              <label className={styles.label} htmlFor="share-name">
+                Nome / identificação
+              </label>
+              <input
+                id="share-name"
+                name="displayName"
+                className={styles.input}
+                placeholder="Ex.: João — Loja Centro"
+                maxLength={120}
+                autoComplete="off"
+              />
 
-            <div className={styles.actions}>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={close}
-                disabled={pending}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" variant="primary" disabled={pending}>
-                {pending ? "Gerando…" : "Gerar link"}
-              </Button>
-            </div>
-          </form>
+              <label className={styles.label} htmlFor="share-note">
+                Observação{" "}
+                <span className={styles.optional}>(opcional, interna)</span>
+              </label>
+              <input
+                id="share-note"
+                name="contactNote"
+                className={styles.input}
+                placeholder="Ex.: e-mail/telefone de contato"
+                maxLength={300}
+                autoComplete="off"
+              />
+
+              {error && <p className={styles.err}>{error}</p>}
+
+              <div className={styles.actions}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={close}
+                  disabled={pending}
+                >
+                  Fechar
+                </Button>
+                <Button type="submit" variant="primary" disabled={pending}>
+                  {pending ? "Gerando…" : "Gerar link"}
+                </Button>
+              </div>
+            </form>
+          </div>
         )}
       </dialog>
-    </section>
+    </>
   );
 }
 

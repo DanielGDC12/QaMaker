@@ -67,6 +67,9 @@ export default async function ProjetoDetalhePage({
       <div className={styles.titleRow}>
         <h1 className={styles.title}>{project.name}</h1>
         <div className={styles.actions}>
+          {isFG && (
+            <ShareManagementPanel projectId={project.id} shares={shares} />
+          )}
           <AddPointButton projectId={project.id} />
           {isFG && (
             <DeleteProjectButton
@@ -76,10 +79,6 @@ export default async function ProjetoDetalhePage({
           )}
         </div>
       </div>
-
-      {isFG && (
-        <ShareManagementPanel projectId={project.id} shares={shares} />
-      )}
 
       {points.length === 0 ? (
         <p className={styles.empty}>
