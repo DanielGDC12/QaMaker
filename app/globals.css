@@ -1,11 +1,134 @@
 /* ============================================================
    QA Maker — Design tokens (Identidade visual Agência FG)
+   ------------------------------------------------------------
+   Fonte única de verdade dos tokens. Duas camadas:
+   1. FG Design System — tokens importados do Claude Design
+      ("QA Maker Kanban Board", design system Agência FG). São a
+      camada canônica; novos componentes consomem estes.
+   2. Compatibilidade — nomes legados já usados pelos .module.css
+      existentes. Mantidos para não quebrar nada; migração para os
+      tokens FG é feita componente a componente.
    ============================================================ */
+
+/* ── Camada 1 · FG Design System — Cores ──────────────────── */
 :root {
-  /* Marca */
-  --color-bordo: #340204;
-  --color-vermelho: #6a0b11;
-  --color-pink: #f91669;
+  /* Primárias — bordô + vermelho */
+  --fg-bordo: #340204;
+  --fg-bordo-escuro: #210102;
+  --fg-vermelho: #6a0b11;
+  --fg-vermelho-vivo: #980000;
+
+  /* Secundárias — rosa + cinza (só detalhes/destaques) */
+  --fg-rosa: #f91669;
+  --fg-cinza: #595959;
+
+  /* Neutros de trabalho (amostrados da arte de produção) */
+  --fg-bordo-ink: #2f1718;
+  --fg-white: #ffffff;
+  --fg-black: #000000;
+  --fg-ink: #373636;
+  --fg-placeholder: #6d6a6b;
+  --fg-gray-100: #f6f5f5;
+  --fg-gray-200: #e4e3e3;
+  --fg-gray-300: #d9d9d9;
+  --fg-gray-400: #c3c2c2;
+
+  /* Gradientes de marca */
+  --fg-gradient: linear-gradient(135deg, var(--fg-bordo) 0%, var(--fg-vermelho) 100%);
+  --fg-gradient-soft: linear-gradient(135deg, var(--fg-bordo-escuro) 0%, var(--fg-vermelho) 100%);
+
+  /* Aliases semânticos — preferir estes nos componentes */
+  --brand: var(--fg-vermelho);
+  --brand-strong: var(--fg-bordo);
+  --accent: var(--fg-rosa);
+
+  --text-heading: var(--fg-vermelho);
+  --text-body: var(--fg-ink);
+  --text-muted: var(--fg-placeholder);
+  --text-inverse: var(--fg-white);
+  --text-on-brand: var(--fg-white);
+
+  --surface-page: var(--fg-white);
+  --surface-card: var(--fg-white);
+  --surface-muted: var(--fg-gray-100);
+  --surface-field: var(--fg-white);
+  --surface-bordo: var(--fg-vermelho);
+  --surface-bordo-deep: var(--fg-bordo);
+
+  --border-subtle: var(--fg-gray-300);
+  --border-field: var(--fg-gray-400);
+  --focus-ring: var(--fg-rosa);
+
+  /* Status do ponto de QA (verde "feito" definido no design) */
+  --fg-status-feito: #1b8a5a;
+}
+
+/* ── Camada 1 · FG Design System — Tipografia ─────────────── */
+:root {
+  /* Famílias — a família (IBM Plex Sans) é carregada via next/font
+     em app/layout.tsx e exposta como --font-ibm-plex-sans. */
+  --font-display: var(--font-sans);
+
+  /* Pesos */
+  --fw-light: 300;
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+
+  /* Tracking — assinatura FG: títulos apertados */
+  --tracking-tight: -0.04em;
+  --tracking-snug: -0.02em;
+  --tracking-normal: 0em;
+
+  /* Escala de tamanho */
+  --fs-title-sm: 1.875rem;
+  --fs-title-md: 2.1875rem;
+  --fs-title-lg: 2.5rem;
+  --fs-sub-sm: 1.125rem;
+  --fs-sub-md: 1.3125rem;
+  --fs-sub-lg: 1.5625rem;
+  --fs-text-sm: 0.75rem;
+  --fs-text-md: 0.875rem;
+  --fs-text-lg: 1rem;
+  --fs-display: 3.25rem;
+
+  /* Altura de linha */
+  --lh-tight: 1;
+  --lh-heading: 1.1;
+  --lh-snug: 1.25;
+  --lh-body: 1.45;
+  --lh-relaxed: 1.6;
+}
+
+/* ── Camada 1 · FG Design System — Raio / sombra / layout ──── */
+:root {
+  /* Raios do design (fields/botões 12px · cards grandes 20 · modais 36) */
+  --radius-xs: 4px;
+  --radius-lg: 20px;
+  --radius-xl: 36px;
+
+  /* Sombras do design — bordô-tintadas */
+  --shadow-sm: 0 1px 2px rgba(29, 14, 15, 0.08);
+  --shadow-md: 0 6px 20px rgba(29, 14, 15, 0.12);
+  --shadow-lg: 0 18px 48px rgba(29, 14, 15, 0.2);
+  --shadow-card: 0 12px 32px rgba(29, 14, 15, 0.14);
+
+  /* Espaçamento — extensões do design (a base 4→48 já existe abaixo) */
+  --space-8: 4rem; /* 64px */
+  --space-9: 6rem; /* 96px */
+  --space-10: 8rem; /* 128px */
+
+  --container-max: 1240px;
+  --gutter: 1.5rem;
+}
+
+/* ── Camada 2 · Compatibilidade (nomes legados) ───────────── */
+:root {
+  /* Marca — unificados aos primitivos FG (valores idênticos) */
+  --color-bordo: var(--fg-bordo);
+  --color-vermelho: var(--fg-vermelho);
+  --color-pink: var(--fg-rosa);
 
   /* Status dos pontos */
   --status-feito: #16be78;
