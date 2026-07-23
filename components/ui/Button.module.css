@@ -1,22 +1,34 @@
+/* Base — assinatura FG: IBM Plex Bold, tracking apertado, raio 12px,
+   feedback de press (scale) + brilho no hover. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: var(--space-2);
-  font-weight: 600;
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
+  font-family: var(--font-sans);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-snug);
+  line-height: 1;
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
   white-space: nowrap;
-  transition: background 0.14s ease, border-color 0.14s ease,
-    box-shadow 0.14s ease, opacity 0.14s ease;
+  box-sizing: border-box;
+  transition: transform 0.14s ease, filter 0.14s ease, background 0.14s ease,
+    border-color 0.14s ease, color 0.14s ease;
 }
 
+.btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
 .btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 
-/* Tamanhos */
+/* Tamanhos — alturas mantidas p/ não deslocar o layout existente */
 .md {
   height: 2.5rem;
   padding: 0 1.125rem;
@@ -29,46 +41,33 @@
   font-size: 0.8125rem;
 }
 
-/* Variantes */
+/* Variantes — mapeadas ao Button do FG Design System */
 .primary {
-  background: var(--color-pink);
-  color: #fff;
-  box-shadow: var(--shadow-1);
-}
-.primary:hover:not(:disabled) {
-  background: #e00d5c;
-  box-shadow: var(--shadow-2);
-}
-.primary:active:not(:disabled) {
-  background: #c80a51;
+  background: var(--fg-vermelho);
+  color: var(--fg-white);
 }
 
 .secondary {
-  background: var(--surface);
-  color: var(--color-bordo);
-  border-color: var(--border);
+  background: transparent;
+  color: var(--fg-vermelho);
+  border-color: var(--fg-vermelho);
 }
 .secondary:hover:not(:disabled) {
-  border-color: var(--color-pink);
-  color: var(--color-pink);
+  background: var(--bordo-weak);
+  filter: none;
 }
 
 .ghost {
   background: transparent;
-  color: var(--muted);
+  color: var(--fg-cinza);
 }
 .ghost:hover:not(:disabled) {
   background: var(--bordo-weak);
-  color: var(--text);
+  color: var(--fg-bordo-ink);
+  filter: none;
 }
 
 .danger {
-  background: transparent;
-  color: var(--color-vermelho);
-  border-color: var(--border);
-}
-.danger:hover:not(:disabled) {
-  background: var(--color-vermelho);
-  border-color: var(--color-vermelho);
-  color: #fff;
+  background: var(--fg-bordo);
+  color: var(--fg-white);
 }

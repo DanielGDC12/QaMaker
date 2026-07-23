@@ -153,7 +153,7 @@
 
   /* Raio */
   --radius: 16px;
-  --radius-md: 10px;
+  --radius-md: 12px; /* fields/botões — valor do FG Design System */
   --radius-sm: 8px;
   --radius-pill: 999px;
 

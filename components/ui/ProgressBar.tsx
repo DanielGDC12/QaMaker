@@ -4,13 +4,13 @@ interface ProgressBarProps {
   /** 0–100 */
   value: number;
   size?: "md" | "lg";
-  /** Cor da barra; padrão pink da marca. Verde quando concluído. */
+  /** Cor da barra; padrão é o gradiente de marca FG. Verde quando concluído. */
   color?: string;
 }
 
 export function ProgressBar({ value, size = "md", color }: ProgressBarProps) {
   const pct = Math.max(0, Math.min(100, value));
-  const fill = color ?? (pct >= 100 ? "var(--status-feito)" : "var(--color-pink)");
+  const fill = color ?? (pct >= 100 ? "var(--status-feito)" : "var(--fg-gradient)");
   return (
     <div
       className={`${styles.track} ${styles[size]}`}
