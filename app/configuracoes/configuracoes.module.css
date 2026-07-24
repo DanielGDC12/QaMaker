@@ -1,7 +1,7 @@
 .main {
   max-width: var(--content-max);
   margin: 0 auto;
-  padding: 2.5rem 1.5rem 4rem;
+  padding: 2.25rem 2rem 3.75rem;
 }
 
 .head {
@@ -9,13 +9,16 @@
 }
 
 .title {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--color-bordo);
+  font-size: var(--fs-title-sm);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--lh-heading);
+  color: var(--text-heading);
 }
 
 .sub {
-  margin-top: 0.375rem;
-  color: var(--muted);
+  margin-top: 0.5rem;
+  color: var(--fg-cinza);
   font-size: 0.9375rem;
+  line-height: var(--lh-body);
 }

@@ -8,17 +8,17 @@
       rgba(249, 22, 105, 0.08),
       transparent 60%
     ),
-    var(--bg);
+    var(--fg-gray-100);
 }
 
 .card {
   width: 100%;
   max-width: 380px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-2);
-  padding: 2.25rem 2rem;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  padding: 2.5rem 2rem;
   text-align: center;
 }
 
@@ -29,37 +29,35 @@
   margin-bottom: 1.5rem;
 }
 .mark {
-  width: 1.125rem;
-  height: 1.125rem;
-  border-radius: 5px;
-  background: var(--color-pink);
-  box-shadow: 0 0 0 4px rgba(249, 22, 105, 0.18);
+  display: block;
+  color: var(--fg-vermelho);
 }
 .word {
   font-size: 1.0625rem;
-  color: var(--color-bordo);
-  font-weight: 400;
-}
-.word strong {
-  font-weight: 700;
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-snug);
+  color: var(--fg-bordo-ink);
 }
 
 .title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: var(--color-bordo);
+  font-size: var(--fs-sub-md);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-snug);
+  line-height: var(--lh-snug);
+  color: var(--text-heading);
 }
 
 .lead {
   margin-top: 0.5rem;
   margin-bottom: 1.75rem;
-  color: var(--muted);
+  color: var(--fg-cinza);
   font-size: 0.875rem;
+  line-height: var(--lh-body);
 }
 .lead code {
   font-family: inherit;
-  font-weight: 600;
-  color: var(--color-pink);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-vermelho);
 }
 
 .cta {

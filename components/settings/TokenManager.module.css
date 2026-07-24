@@ -6,17 +6,19 @@
 
 /* ── Formulário de criação ─────────────────────────────────── */
 .form {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.25rem;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 1.375rem;
 }
 
 .label {
   display: block;
   font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-bordo);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-snug);
+  color: var(--fg-bordo-ink);
   margin-bottom: 0.5rem;
 }
 
@@ -28,35 +30,42 @@
 
 .input {
   flex: 1;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  height: 2.75rem;
+  padding: 0 0.9375rem;
+  border: 1px solid var(--border-field);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: var(--fw-light);
   font-size: 0.9375rem;
-  background: var(--bg, #fff);
-  color: inherit;
+  background: var(--surface-field);
+  color: var(--fg-bordo-ink);
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
 }
 .input:focus {
-  outline: 2px solid var(--color-pink);
-  outline-offset: 1px;
+  outline: none;
+  border-color: var(--fg-rosa);
+  box-shadow: 0 0 0 3px var(--pink-weak);
 }
 
 .err {
   margin-top: 0.5rem;
-  color: var(--color-bordo);
+  color: var(--fg-vermelho-vivo);
   font-size: 0.8125rem;
+  font-weight: var(--fw-medium);
 }
 
 /* ── Token recém-revelado ──────────────────────────────────── */
 .reveal {
   background: var(--pink-weak);
   border: 1px solid var(--pink-weak-2);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   padding: 1rem 1.25rem;
 }
 .revealTitle {
   font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--color-bordo);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-snug);
+  color: var(--fg-bordo-ink);
   margin-bottom: 0.625rem;
 }
 .revealRow {
@@ -68,10 +77,11 @@
   flex: 1;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.8125rem;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 0.5rem 0.75rem;
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.625rem 0.75rem;
+  color: var(--fg-bordo-ink);
   overflow-x: auto;
   white-space: nowrap;
 }
@@ -84,11 +94,12 @@
 }
 .listTitle {
   font-size: 1rem;
-  font-weight: 700;
-  color: var(--color-bordo);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-snug);
+  color: var(--fg-bordo-ink);
 }
 .empty {
-  color: var(--muted);
+  color: var(--fg-cinza);
   font-size: 0.875rem;
   padding: 1rem 0;
 }
@@ -103,9 +114,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
   padding: 0.875rem 1.125rem;
 }
 .meta {
@@ -114,11 +126,11 @@
   gap: 0.25rem;
 }
 .name {
-  font-weight: 600;
-  color: var(--color-bordo);
+  font-weight: var(--fw-semibold);
+  color: var(--fg-bordo-ink);
   font-size: 0.9375rem;
 }
 .dates {
   font-size: 0.75rem;
-  color: var(--muted);
+  color: var(--fg-placeholder);
 }
