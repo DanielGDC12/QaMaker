@@ -58,8 +58,9 @@
   justify-content: center;
   width: 1.75rem;
   height: 1.75rem;
+  border: 0;
   border-radius: var(--radius-sm);
-  color: var(--fg-gray-400);
+  color: var(--fg-placeholder);
   transition: color 0.14s ease, background 0.14s ease;
 }
 .del:hover {

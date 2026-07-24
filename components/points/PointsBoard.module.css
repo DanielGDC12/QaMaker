@@ -248,6 +248,22 @@
   flex-direction: column;
   gap: 0.75rem;
   min-height: 4rem;
+  /* Cada coluna rola sozinha: dá pra descer até o último card da coluna
+     sem rolar o Kanban/página inteira. Piso de 18rem em telas baixas. */
+  max-height: max(18rem, calc(100vh - 23rem));
+  overflow-y: auto;
+  /* respiro p/ a sombra do card e a barra de rolagem não colarem */
+  padding: 0.125rem 0.375rem 0.25rem 0.125rem;
+}
+.columnBody::-webkit-scrollbar {
+  width: 8px;
+}
+.columnBody::-webkit-scrollbar-thumb {
+  background: var(--fg-gray-300);
+  border-radius: var(--radius-pill);
+}
+.columnBody::-webkit-scrollbar-track {
+  background: transparent;
 }
 .columnEmpty {
   display: flex;
