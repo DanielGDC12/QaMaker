@@ -1,6 +1,11 @@
 "use client";
 
-import { useState, type DragEvent } from "react";
+import {
+  useState,
+  type DragEvent,
+  type MouseEvent,
+  type KeyboardEvent,
+} from "react";
 import { StatusDropdown } from "./StatusDropdown";
 import { ImageSlot } from "./ImageSlot";
 import { POINT_STATUS_META, type PointStatus } from "@/lib/constants";
@@ -20,6 +25,8 @@ interface Props {
   dragging?: boolean;
   onDragStart?: () => void;
   onDragEnd?: () => void;
+  /** Abre o modal de detalhe (clique no corpo do card). */
+  onOpen?: () => void;
   onStatusChange: (status: PointStatus) => void;
   onDelete: () => void;
 }
@@ -46,6 +53,7 @@ export function PointCard({
   dragging = false,
   onDragStart,
   onDragEnd,
+  onOpen,
   onStatusChange,
   onDelete,
 }: Props) {
@@ -60,6 +68,19 @@ export function PointCard({
     }
     e.dataTransfer.effectAllowed = "move";
     onDragStart?.();
+  }
+
+  // Clique no corpo abre o detalhe; cliques em controles (data-no-drag) não.
+  function handleOpenClick(e: MouseEvent<HTMLElement>) {
+    if ((e.target as HTMLElement).closest("[data-no-drag]")) return;
+    onOpen?.();
+  }
+  function handleOpenKey(e: KeyboardEvent<HTMLElement>) {
+    if (e.target !== e.currentTarget) return;
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onOpen?.();
+    }
   }
 
   // Somente leitura: externo vendo um ponto que NÃO é dele.
@@ -79,6 +100,11 @@ export function PointCard({
       draggable={canDrag}
       onDragStart={canDrag ? handleDragStart : undefined}
       onDragEnd={canDrag ? onDragEnd : undefined}
+      onClick={onOpen ? handleOpenClick : undefined}
+      onKeyDown={onOpen ? handleOpenKey : undefined}
+      role={onOpen ? "button" : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      aria-label={onOpen ? `Abrir ponto: ${point.title}` : undefined}
     >
       <div data-no-drag className={styles.thumb}>
         <ImageSlot

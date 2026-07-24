@@ -3,6 +3,7 @@
 import { useOptimistic, startTransition, useState, type DragEvent } from "react";
 import { ProgressBar, Pill } from "@/components/ui";
 import { PointCard } from "./PointCard";
+import { PointDetailModal } from "./PointDetailModal";
 import { StatusDropdown } from "./StatusDropdown";
 import { Toast } from "@/components/ui/Toast";
 import {
@@ -72,6 +73,7 @@ export function PointsBoard({
   const [view, setView] = useState<View>("kanban");
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<PointStatus | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const { pct, done, total } = calcProgress(points);
 
@@ -341,6 +343,7 @@ export function PointsBoard({
                         dragging={draggingId === point.id}
                         onDragStart={() => onCardDragStart(point.id)}
                         onDragEnd={onCardDragEnd}
+                        onOpen={() => setOpenId(point.id)}
                         onStatusChange={(s) => changeStatus(point.id, s)}
                         onDelete={() => removePoint(point.id)}
                       />
@@ -430,6 +433,22 @@ export function PointsBoard({
           })}
         </div>
       )}
+
+      {(() => {
+        const open = openId ? points.find((p) => p.id === openId) : null;
+        if (!open) return null;
+        return (
+          <PointDetailModal
+            point={open}
+            number={numberOf.get(open.id) ?? 0}
+            pending={pendingId === open.id}
+            viewerType={viewerType}
+            editable={canEditPoint(open)}
+            onStatusChange={(s) => changeStatus(open.id, s)}
+            onClose={() => setOpenId(null)}
+          />
+        );
+      })()}
 
       {error && <Toast message={error} onDismiss={() => setError(null)} />}
     </>

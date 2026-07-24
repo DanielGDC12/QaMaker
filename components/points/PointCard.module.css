@@ -7,11 +7,16 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
+  cursor: pointer;
   transition: box-shadow 0.15s ease, transform 0.15s ease,
     border-color 0.15s ease, opacity 0.15s ease;
 }
 .card:hover {
   box-shadow: var(--shadow-md);
+}
+.card:focus-visible {
+  outline: 2px solid var(--fg-rosa);
+  outline-offset: 2px;
 }
 
 /* Kanban: card arrastável */
