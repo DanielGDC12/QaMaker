@@ -1,10 +1,10 @@
 .dialog {
   border: none;
-  border-radius: var(--radius);
+  border-radius: var(--radius-xl);
   padding: 0;
   width: min(440px, calc(100vw - 2rem));
-  box-shadow: var(--shadow-3);
-  color: var(--text);
+  box-shadow: var(--shadow-lg);
+  color: var(--text-body);
 }
 .dialog[open] {
   /* o reset global zera o "margin: auto" que o navegador usa para
@@ -12,32 +12,57 @@
   position: fixed;
   inset: 0;
   margin: auto;
+  animation: dialogIn 180ms ease;
 }
 .dialog::backdrop {
-  background: rgba(52, 2, 4, 0.38);
+  background: rgba(33, 1, 2, 0.55);
   backdrop-filter: blur(2px);
 }
 
+@keyframes dialogIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.875rem) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 .body {
-  padding: 1.75rem;
+  padding: 1.875rem;
+}
+
+.warnIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-pill);
+  background: rgba(52, 2, 4, 0.08);
+  color: var(--fg-bordo);
+  margin-bottom: 1rem;
 }
 
 .title {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--color-bordo);
+  font-size: var(--fs-sub-md);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-snug);
+  color: var(--text-heading);
 }
 
 .text {
   margin-top: 0.5rem;
   font-size: 0.875rem;
-  color: var(--muted);
-  line-height: 1.5;
+  color: var(--fg-cinza);
+  line-height: var(--lh-body);
 }
 
 .actions {
   display: flex;
   justify-content: flex-end;
-  gap: 0.625rem;
-  margin-top: 1.5rem;
+  gap: 0.75rem;
+  margin-top: 1.625rem;
 }

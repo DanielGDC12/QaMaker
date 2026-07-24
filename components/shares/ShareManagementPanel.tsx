@@ -128,7 +128,12 @@ export function ShareManagementPanel({ projectId, shares }: Props) {
           </div>
         ) : (
           <div className={styles.form}>
-            <h3 className={styles.dialogTitle}>Acessos do cliente</h3>
+            <div className={styles.titleRow}>
+              <h3 className={styles.dialogTitle}>Acessos do cliente</h3>
+              {active.length > 0 && (
+                <span className={styles.activePill}>{active.length} ativos</span>
+              )}
+            </div>
             <p className={styles.dialogSub}>
               {active.length === 0
                 ? "Nenhum acesso externo ativo. Gere um link para o cliente reportar pontos."

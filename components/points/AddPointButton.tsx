@@ -157,7 +157,7 @@ export function AddPointButton({ projectId }: { projectId: string }) {
           </select>
 
           <label className={styles.label} htmlFor="point-title">
-            Título
+            Título <span className={styles.req}>*</span>
           </label>
           <input
             id="point-title"
