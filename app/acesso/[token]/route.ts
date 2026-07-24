@@ -28,16 +28,6 @@ export async function GET(
     ? await getShareByTokenHash(await sha256Hex(token))
     : null;
 
-  // [DEBUG temporário — remover depois]
-  console.log(
-    "[acesso] redenção token, shareEncontrado?",
-    Boolean(share),
-    "projectId:",
-    share?.projectId,
-    "temSegredo?",
-    Boolean(process.env.EXTERNAL_SHARE_COOKIE_SECRET)
-  );
-
   if (!share) {
     return NextResponse.redirect(
       new URL("/acesso-restrito?motivo=link", origin)
