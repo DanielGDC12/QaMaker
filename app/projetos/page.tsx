@@ -44,7 +44,20 @@ export default async function ProjetosPage({
 
       {allProjects.length === 0 ? (
         <div className={styles.empty}>
-          <div className={styles.emptyMark} aria-hidden />
+          <span className={styles.emptyMark} aria-hidden>
+            <svg
+              width="32"
+              height="32"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.7"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+            </svg>
+          </span>
           <h2 className={styles.emptyTitle}>Nenhum projeto ainda</h2>
           <p className={styles.emptyText}>
             Crie o primeiro projeto para começar uma auditoria. Depois é só

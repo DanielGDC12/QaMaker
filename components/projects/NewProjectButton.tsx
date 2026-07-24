@@ -50,7 +50,7 @@ export function NewProjectButton() {
           </p>
 
           <label className={styles.label} htmlFor="project-name">
-            Nome da loja
+            Nome da loja <span className={styles.req}>*</span>
           </label>
           <input
             ref={inputRef}
