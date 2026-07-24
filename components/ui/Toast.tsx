@@ -24,8 +24,31 @@ export function Toast({
   }, [duration, onDismiss]);
 
   return (
-    <div className={`${styles.toast} ${styles[variant]}`} role="status">
-      <span>{message}</span>
+    <div className={styles.toast} role="status">
+      <span className={`${styles.icon} ${styles[variant]}`} aria-hidden>
+        {variant === "success" ? (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M20 6L9 17l-5-5"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        ) : (
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2" />
+            <path
+              d="M12 8v4m0 4h.01"
+              stroke="currentColor"
+              strokeWidth="2.4"
+              strokeLinecap="round"
+            />
+          </svg>
+        )}
+      </span>
+      <span className={styles.msg}>{message}</span>
       <button
         type="button"
         className={styles.close}

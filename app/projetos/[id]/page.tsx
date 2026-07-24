@@ -50,18 +50,15 @@ export default async function ProjetoDetalhePage({
   return (
     <main className={styles.main}>
       {isFG && (
-        <Link href="/projetos" className={styles.back}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden>
-            <path
-              d="M15 18l-6-6 6-6"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Voltar
-        </Link>
+        <nav className={styles.crumb} aria-label="Trilha de navegação">
+          <Link href="/projetos" className={styles.crumbLink}>
+            Projetos
+          </Link>
+          <span className={styles.crumbSep} aria-hidden>
+            /
+          </span>
+          <span className={styles.crumbCurrent}>{project.name}</span>
+        </nav>
       )}
 
       <div className={styles.titleRow}>
