@@ -106,27 +106,6 @@ export const projectPoints = pgTable(
   ]
 );
 
-/* ── Tokens de API (autenticação da extensão de navegador) ─── */
-export const apiTokens = pgTable(
-  "api_tokens",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    // Dono do token — as ações feitas via token são atribuídas a este usuário.
-    email: text("email")
-      .notNull()
-      .references(() => users.email, { onDelete: "cascade" }),
-    // Guardamos apenas o hash (SHA-256) — o token em claro é exibido uma vez.
-    tokenHash: text("token_hash").notNull().unique(),
-    label: text("label").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .defaultNow()
-      .notNull(),
-    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
-    revokedAt: timestamp("revoked_at", { withTimezone: true }),
-  },
-  (t) => [index("idx_api_tokens_email").on(t.email)]
-);
-
 /* ── Relations (para a query API do Drizzle) ──────────────── */
 export const projectsRelations = relations(projects, ({ many, one }) => ({
   points: many(projectPoints),
@@ -157,7 +136,5 @@ export type Project = typeof projects.$inferSelect;
 export type NewProject = typeof projects.$inferInsert;
 export type ProjectPoint = typeof projectPoints.$inferSelect;
 export type NewProjectPoint = typeof projectPoints.$inferInsert;
-export type ApiToken = typeof apiTokens.$inferSelect;
-export type NewApiToken = typeof apiTokens.$inferInsert;
 export type ProjectShare = typeof projectShares.$inferSelect;
 export type NewProjectShare = typeof projectShares.$inferInsert;

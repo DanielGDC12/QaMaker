@@ -22,13 +22,6 @@
       "when": 1784208379031,
       "tag": "0002_next_mentor",
       "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1784751353394,
-      "tag": "0003_dusty_ravenous",
-      "breakpoints": true
     }
   ]
 }
