@@ -1,5 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { listProjectsWithProgress } from "@/lib/db/queries";
+import { getFGUser } from "@/lib/auth-guard";
 import { ProjectRow } from "@/components/projects/ProjectRow";
 import { NewProjectButton } from "@/components/projects/NewProjectButton";
 import { deriveProjectStatus, PROJECT_STATUS_META, type ProjectStatus } from "@/lib/constants";
@@ -22,6 +24,11 @@ export default async function ProjetosPage({
 }: {
   searchParams: Promise<{ status?: string }>;
 }) {
+  // Lista é FG-only (o proxy já bloqueia, isto é a 2ª camada). O ator externo
+  // nunca chega aqui — só tem acesso ao detalhe do próprio projeto.
+  const user = await getFGUser();
+  if (!user) redirect("/login");
+
   const { status } = await searchParams;
   const activeTab = TABS.some((t) => t.key === status) ? (status as ProjectStatus | "todos") : "todos";
 
