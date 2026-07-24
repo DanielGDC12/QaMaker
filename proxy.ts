@@ -63,17 +63,6 @@ export default auth(async (req) => {
       externalShareCookieName(projectId)
     )?.value;
     const verified = await verifyExternalShareToken(cookieValue, projectId);
-    // [DEBUG temporário — remover depois]
-    console.log(
-      "[proxy] /projetos",
-      projectId,
-      "temCookie?",
-      Boolean(cookieValue),
-      "verificado?",
-      Boolean(verified),
-      "temSegredo?",
-      Boolean(process.env.EXTERNAL_SHARE_COOKIE_SECRET)
-    );
     if (verified) return NextResponse.next();
   }
 
