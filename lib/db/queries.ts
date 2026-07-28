@@ -28,12 +28,24 @@ export async function upsertUser(u: {
     });
 }
 
+/** Usuários FG (para o seletor de responsável). Ordenados por nome. */
+export async function listUsers(): Promise<
+  { email: string; name: string }[]
+> {
+  return db
+    .select({ email: users.email, name: users.name })
+    .from(users)
+    .orderBy(asc(users.name));
+}
+
 /* ── Projetos: lista com progresso agregado ───────────────── */
 export interface ProjectWithProgress {
   id: string;
   name: string;
   createdAt: Date;
   createdBy: string;
+  responsibleEmail: string | null;
+  responsibleName: string | null;
   total: number;
   done: number;
   pct: number;
@@ -44,6 +56,7 @@ export async function listProjectsWithProgress(): Promise<
 > {
   const doneFilter = sql<number>`count(*) filter (where ${projectPoints.status} in ('feito','nao_possivel'))`;
   const totalCount = sql<number>`count(${projectPoints.id})`;
+  const responsible = alias(users, "responsible_user");
 
   const rows = await db
     .select({
@@ -51,12 +64,15 @@ export async function listProjectsWithProgress(): Promise<
       name: projects.name,
       createdAt: projects.createdAt,
       createdBy: projects.createdBy,
+      responsibleEmail: projects.responsibleEmail,
+      responsibleName: responsible.name,
       total: totalCount,
       done: doneFilter,
     })
     .from(projects)
     .leftJoin(projectPoints, eq(projectPoints.projectId, projects.id))
-    .groupBy(projects.id)
+    .leftJoin(responsible, eq(projects.responsibleEmail, responsible.email))
+    .groupBy(projects.id, responsible.name)
     .orderBy(desc(projects.createdAt));
 
   return rows.map((r) => {
@@ -71,10 +87,59 @@ export async function listProjectsWithProgress(): Promise<
   });
 }
 
+/**
+ * Contagem de pontos totais vs. auditados de um projeto (para detectar a
+ * transição para 100% nas notificações). Espelha a lógica de `calcProgress`.
+ */
+export async function getProjectProgress(
+  projectId: string
+): Promise<{ total: number; done: number }> {
+  const [row] = await db
+    .select({
+      total: sql<number>`count(${projectPoints.id})`,
+      done: sql<number>`count(*) filter (where ${projectPoints.status} in ('feito','nao_possivel'))`,
+    })
+    .from(projectPoints)
+    .where(eq(projectPoints.projectId, projectId));
+  return { total: Number(row?.total ?? 0), done: Number(row?.done ?? 0) };
+}
+
+/** Nome do projeto (barato, para compor mensagens de notificação). */
+export async function getProjectName(id: string): Promise<string | null> {
+  const [row] = await db
+    .select({ name: projects.name })
+    .from(projects)
+    .where(eq(projects.id, id));
+  return row?.name ?? null;
+}
+
 /* ── Projeto individual + pontos ──────────────────────────── */
 export async function getProject(id: string) {
   const [row] = await db.select().from(projects).where(eq(projects.id, id));
   return row ?? null;
+}
+
+/**
+ * Define (ou remove) o responsável pelo projeto. `email` null desatribui.
+ * A validação de que o e-mail existe em `users` fica na action que chama.
+ */
+export async function setProjectResponsible(
+  projectId: string,
+  email: string | null
+) {
+  await db
+    .update(projects)
+    .set({ responsibleEmail: email })
+    .where(eq(projects.id, projectId));
+}
+
+/** True se o e-mail corresponde a um usuário FG existente. */
+export async function userExists(email: string): Promise<boolean> {
+  const [row] = await db
+    .select({ email: users.email })
+    .from(users)
+    .where(eq(users.email, email));
+  return Boolean(row);
 }
 
 export async function getProjectPoint(pointId: string) {

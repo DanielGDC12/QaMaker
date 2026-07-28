@@ -28,16 +28,16 @@ export function ImageZoomModal({ url, alt, open, onClose }: Props) {
   }, [open]);
 
   useEffect(() => {
-    if (!open) {
-      setScale(MIN_SCALE);
-      setPos({ x: 0, y: 0 });
-    }
-  }, [open]);
-
-  useEffect(() => {
     const dlg = dialogRef.current;
     if (!dlg) return;
-    const onNativeClose = () => onClose();
+    // Reset do zoom no fecho (cobre Escape, backdrop e close programático).
+    // Fica no handler do evento, não no corpo de um effect, evitando o
+    // setState síncrono que a regra react-hooks/set-state-in-effect proíbe.
+    const onNativeClose = () => {
+      setScale(MIN_SCALE);
+      setPos({ x: 0, y: 0 });
+      onClose();
+    };
     const onBackdropClick = (e: MouseEvent) => {
       if (e.target === dlg) onClose();
     };

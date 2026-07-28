@@ -1,0 +1,2 @@
+ALTER TABLE "projects" ADD COLUMN "responsible_email" text;--> statement-breakpoint
+ALTER TABLE "projects" ADD CONSTRAINT "projects_responsible_email_users_email_fk" FOREIGN KEY ("responsible_email") REFERENCES "public"."users"("email") ON DELETE no action ON UPDATE no action;

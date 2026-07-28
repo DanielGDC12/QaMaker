@@ -21,6 +21,7 @@ export function ProjectRow({ project }: { project: ProjectWithProgress }) {
         <span className={styles.name}>{project.name}</span>
         <span className={styles.meta}>
           {count} · criado em {dateFmt.format(new Date(project.createdAt))}
+          {project.responsibleName ? ` · ${project.responsibleName}` : ""}
         </span>
       </div>
       <div className={styles.progress}>

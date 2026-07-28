@@ -19,6 +19,9 @@ export const users = pgTable("users", {
   email: text("email").primaryKey(),
   name: text("name").notNull(),
   avatarUrl: text("avatar_url"),
+  // Cache do ID de usuário no Slack (resolvido via users.lookupByEmail na 1ª
+  // notificação). Nullable: preenchido sob demanda. Nunca é PII sensível.
+  slackUserId: text("slack_user_id"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -36,6 +39,9 @@ export const projects = pgTable(
     createdBy: text("created_by")
       .notNull()
       .references(() => users.email),
+    // Responsável pelo projeto (usuário FG). Nullable: projetos podem ficar sem
+    // dono. Só e-mail FG (users.email) — o ator externo nunca é responsável.
+    responsibleEmail: text("responsible_email").references(() => users.email),
   },
   (t) => [index("idx_projects_created_by").on(t.createdBy)]
 );
@@ -160,6 +166,12 @@ export const projectsRelations = relations(projects, ({ many, one }) => ({
   creator: one(users, {
     fields: [projects.createdBy],
     references: [users.email],
+    relationName: "project_creator",
+  }),
+  responsible: one(users, {
+    fields: [projects.responsibleEmail],
+    references: [users.email],
+    relationName: "project_responsible",
   }),
 }));
 

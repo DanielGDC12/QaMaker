@@ -4,11 +4,13 @@ import {
   getProject,
   getProjectPoints,
   listSharesForProject,
+  listUsers,
 } from "@/lib/db/queries";
 import { requireProjectActor, getFGUser, type Actor } from "@/lib/auth-guard";
 import { PointsBoard } from "@/components/points/PointsBoard";
 import { AddPointButton } from "@/components/points/AddPointButton";
 import { DeleteProjectButton } from "@/components/projects/DeleteProjectButton";
+import { ResponsibleSelect } from "@/components/projects/ResponsibleSelect";
 import { ShareManagementPanel } from "@/components/shares/ShareManagementPanel";
 import styles from "./detalhe.module.css";
 
@@ -46,6 +48,7 @@ export default async function ProjetoDetalhePage({
   const isFG = actor.type === "fg";
   const points = await getProjectPoints(id, actor);
   const shares = isFG ? await listSharesForProject(id) : [];
+  const users = isFG ? await listUsers() : [];
 
   // Identidade do visitante para atribuir/apagar comentários (autor).
   const fgUser = isFG ? await getFGUser() : null;
@@ -81,6 +84,13 @@ export default async function ProjetoDetalhePage({
       <div className={styles.titleRow}>
         <h1 className={styles.title}>{project.name}</h1>
         <div className={styles.actions}>
+          {isFG && (
+            <ResponsibleSelect
+              projectId={project.id}
+              value={project.responsibleEmail}
+              users={users}
+            />
+          )}
           {isFG && (
             <ShareManagementPanel projectId={project.id} shares={shares} />
           )}

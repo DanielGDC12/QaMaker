@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { after } from "next/server";
+import { headers } from "next/headers";
 import { del } from "@vercel/blob";
 import {
   requireFGUser,
@@ -20,11 +22,23 @@ import {
   addPointComment,
   getPointComment,
   deletePointComment,
+  setProjectResponsible,
+  userExists,
+  getProjectProgress,
+  getProjectName,
   type PointCommentView,
 } from "@/lib/db/queries";
 import type { ProjectPoint } from "@/lib/db/schema";
+import { notifyResponsible } from "@/lib/slack";
+import {
+  appOriginFromHeaders,
+  pointStatusChangedMessage,
+  newPointMessage,
+  projectCompletedMessage,
+} from "@/lib/slack-messages";
 import {
   POINT_STATUSES,
+  DONE_STATUSES,
   CATEGORIES,
   type PointStatus,
   type Category,
@@ -39,6 +53,19 @@ export interface AddPointState {
 /** Identificador do ator para gravação (e-mail FG ou share.id externo). */
 function actorId(actor: Actor): string {
   return actor.type === "fg" ? actor.email : actor.shareId;
+}
+
+/** Nome de exibição do ator para as notificações (e-mail FG ou nome externo). */
+function actorLabel(actor: Actor): string {
+  return actor.type === "fg" ? actor.email : actor.displayName;
+}
+
+/**
+ * E-mail do ator, se FG — usado como `skipEmail` para não notificar o
+ * responsável sobre a própria ação. Ator externo nunca é responsável → null.
+ */
+function actorEmail(actor: Actor): string | null {
+  return actor.type === "fg" ? actor.email : null;
 }
 
 /**
@@ -97,6 +124,23 @@ export async function addPoint(
     { id: actorId(actor), isExternal: actor.type === "external" }
   );
 
+  // Notifica o responsável (best-effort, após a resposta).
+  const origin = appOriginFromHeaders(await headers());
+  const projectName = (await getProjectName(projectId)) ?? "Projeto";
+  after(() =>
+    notifyResponsible(
+      projectId,
+      newPointMessage({
+        origin,
+        projectId,
+        projectName,
+        actorName: actorLabel(actor),
+        pointTitle: title,
+      }),
+      { skipEmail: actorEmail(actor) }
+    )
+  );
+
   revalidatePath(`/projetos/${projectId}`);
   return { ok: true, pointId: point.id };
 }
@@ -134,7 +178,41 @@ export async function updatePointStatus(
   const point = await getProjectPoint(pointId);
   assertCanMutate(actor, point, projectId);
 
+  const previousStatus = point.status;
   await updateProjectPoint(pointId, { status }, actorId(actor));
+
+  // Notificação (best-effort). Só interessa quando o status VIRA "feito" ou
+  // "nao_possivel" (não notificamos transições para "iniciado"/"pendente").
+  const wasCountable = DONE_STATUSES.includes(previousStatus);
+  const isCountable = DONE_STATUSES.includes(status);
+  if (status !== previousStatus && isCountable) {
+    const origin = appOriginFromHeaders(await headers());
+    const projectName = (await getProjectName(projectId)) ?? "Projeto";
+    const skipEmail = actorEmail(actor);
+
+    // Este ponto acabou de virar contável e completou o projeto? → conclusão.
+    const { total, done } = await getProjectProgress(projectId);
+    const justCompleted = !wasCountable && total > 0 && done === total;
+
+    const message = justCompleted
+      ? projectCompletedMessage({
+          origin,
+          projectId,
+          projectName,
+          actorName: actorLabel(actor),
+        })
+      : pointStatusChangedMessage({
+          origin,
+          projectId,
+          projectName,
+          actorName: actorLabel(actor),
+          pointTitle: point.title,
+          status,
+        });
+
+    after(() => notifyResponsible(projectId, message, { skipEmail }));
+  }
+
   revalidatePath(`/projetos/${projectId}`);
 }
 
@@ -163,6 +241,37 @@ export async function setPointImage(
     }
   }
   revalidatePath(`/projetos/${projectId}`);
+}
+
+export interface ResponsibleState {
+  error?: string;
+  ok?: boolean;
+}
+
+/**
+ * Define ou remove o responsável pelo projeto. String vazia/"" desatribui.
+ * SOMENTE FG — nunca use requireProjectActor aqui. Valida que o e-mail é de um
+ * usuário FG existente (o seletor só oferece esses, mas revalidamos no servidor).
+ */
+export async function setResponsibleAction(
+  projectId: string,
+  email: string
+): Promise<ResponsibleState> {
+  try {
+    await requireFGUser();
+
+    const value = email.trim() || null;
+    if (value && !(await userExists(value))) {
+      return { error: "Usuário inválido." };
+    }
+
+    await setProjectResponsible(projectId, value);
+    revalidatePath(`/projetos/${projectId}`);
+    revalidatePath("/projetos");
+    return { ok: true };
+  } catch {
+    return { error: "Não foi possível definir o responsável." };
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════

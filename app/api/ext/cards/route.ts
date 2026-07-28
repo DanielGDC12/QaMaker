@@ -1,3 +1,4 @@
+import { after } from "next/server";
 import { put } from "@vercel/blob";
 import { requireApiToken } from "@/lib/api-guard";
 import { AccessDeniedError } from "@/lib/auth-guard";
@@ -5,6 +6,8 @@ import { corsJson, corsPreflight } from "@/lib/api-cors";
 import { validateImageFile } from "@/lib/image";
 import { CATEGORIES, type Category } from "@/lib/constants";
 import { getProject, createExtensionCard } from "@/lib/db/queries";
+import { notifyResponsible } from "@/lib/slack";
+import { appOriginFromHeaders, newPointMessage } from "@/lib/slack-messages";
 
 export const runtime = "nodejs";
 
@@ -75,6 +78,24 @@ export async function POST(request: Request) {
         errorImageUrl: blob.url,
       },
       caller.email
+    );
+
+    // Notifica o responsável (best-effort, após a resposta). O autor via
+    // extensão é sempre FG → skipEmail evita DM sobre a própria adição.
+    const origin = appOriginFromHeaders(request.headers);
+    after(() =>
+      notifyResponsible(
+        projectId,
+        newPointMessage({
+          origin,
+          projectId,
+          projectName: project.name,
+          actorName: caller.email,
+          pointTitle: card.title,
+          viaExtension: true,
+        }),
+        { skipEmail: caller.email }
+      )
     );
 
     return corsJson(
