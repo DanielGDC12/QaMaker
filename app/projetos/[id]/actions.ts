@@ -11,7 +11,7 @@ import {
 } from "@/lib/auth-guard";
 import {
   getProjectPoint,
-  getProjectPoints,
+  getMaxDisplayOrder,
   addProjectPoint,
   updateProjectPoint,
   deleteProjectPoint,
@@ -78,9 +78,7 @@ export async function addPoint(
   if (!title) return { error: "Informe o título do ponto." };
   if (title.length > 200) return { error: "Título muito longo." };
 
-  const existing = await getProjectPoints(projectId, actor);
-  const nextOrder =
-    existing.reduce((max, p) => Math.max(max, p.displayOrder), 0) + 1;
+  const nextOrder = (await getMaxDisplayOrder(projectId)) + 1;
 
   const point = await addProjectPoint(
     projectId,

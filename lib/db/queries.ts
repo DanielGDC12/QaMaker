@@ -3,6 +3,7 @@ import { alias } from "drizzle-orm/pg-core";
 import { db } from "./index";
 import { projects, projectPoints, projectShares, users } from "./schema";
 import type { PointStatus, Category } from "@/lib/constants";
+import { DEFAULT_PROJECT_POINTS } from "@/lib/default-points";
 import type { Actor } from "@/lib/auth-guard";
 
 /* ── Usuários ─────────────────────────────────────────────── */
@@ -143,16 +144,34 @@ export async function getProjectPoints(
     .orderBy(asc(projectPoints.displayOrder));
 }
 
-/* ── Criar projeto vazio (pontos são adicionados manualmente) ── */
+/* ── Criar projeto já com o checklist padrão ───────────────
+   O id é gerado aqui (e não pelo `defaultRandom()` do banco) para que os dois
+   inserts caibam num único `db.batch()` — o driver neon-http não suporta
+   `db.transaction()`, mas o batch vai numa só requisição transacional, então
+   nunca sobra projeto sem pontos (nem pontos sem projeto). */
 export async function createProject(
   name: string,
   createdBy: string
 ): Promise<string> {
-  const [row] = await db
-    .insert(projects)
-    .values({ name, createdBy })
-    .returning({ id: projects.id });
-  return row.id;
+  const id = crypto.randomUUID();
+
+  await db.batch([
+    db.insert(projects).values({ id, name, createdBy }),
+    db.insert(projectPoints).values(
+      DEFAULT_PROJECT_POINTS.map((p, i) => ({
+        projectId: id,
+        category: p.category,
+        title: p.title,
+        subtitle: p.subtitle ?? null,
+        displayOrder: i + 1,
+        createdBy,
+        createdByIsExternal: false,
+        updatedBy: createdBy,
+      }))
+    ),
+  ]);
+
+  return id;
 }
 
 /* ── Atualizar um ponto do projeto ────────────────────────── */
@@ -171,6 +190,21 @@ export async function updateProjectPoint(
     .where(eq(projectPoints.id, pointId))
     .returning();
   return row ?? null;
+}
+
+/**
+ * Maior `display_order` do projeto, ignorando o filtro por ator. Necessário
+ * porque o ator externo só *enxerga* os pontos externos: derivar a próxima
+ * ordem da lista visível colidiria com os pontos do checklist padrão.
+ */
+export async function getMaxDisplayOrder(projectId: string): Promise<number> {
+  const [row] = await db
+    .select({
+      max: sql<number | null>`max(${projectPoints.displayOrder})`,
+    })
+    .from(projectPoints)
+    .where(eq(projectPoints.projectId, projectId));
+  return Number(row?.max ?? 0);
 }
 
 /* ── Adicionar ponto manual a um projeto ──────────────────── */

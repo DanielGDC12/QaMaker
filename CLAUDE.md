@@ -22,10 +22,16 @@ Next.js 16 (App Router) · React 19 · Drizzle ORM + Neon (driver HTTP serverles
 - **`lib/db/index.ts` é lazy** (proxy memoizado) → `next build` não exige env.
 - **Progresso**: status `feito` e `nao_possivel` contam; `pendente`/`iniciado`
   não. Lógica em `lib/constants.ts` (`calcProgress`, `deriveProjectStatus`).
-- **Projetos nascem vazios**: sem template/checklist-padrão. Os pontos de QA são
-  criados manualmente na página do projeto (`AddPointButton`), escolhendo a
-  "página de QA" (categoria em `CATEGORIES`). O board agrupa por categoria na
-  ordem canônica de `CATEGORIES`.
+- **Projetos nascem com o checklist padrão da FG**: `lib/default-points.ts`
+  (`DEFAULT_PROJECT_POINTS`) é a fonte única; `createProject` insere projeto +
+  pontos num único `db.batch()` (neon-http **não** tem `db.transaction()`), com
+  o id gerado via `crypto.randomUUID()`. A inserção é uma **cópia**: editar o
+  template não altera projetos já criados. Pontos extras seguem sendo criados
+  manualmente (`AddPointButton`), escolhendo a "página de QA" (categoria em
+  `CATEGORIES`). O board agrupa por categoria na ordem canônica de `CATEGORIES`.
+- **`display_order` de novos pontos** vem de `getMaxDisplayOrder(projectId)`
+  (sem filtro por ator) — derivar da lista visível colidiria com o checklist
+  padrão, já que o ator externo só enxerga os pontos externos.
 - **Acesso externo (convidado do cliente)**: pessoas fora do domínio FG acessam
   UM projeto via link tokenizado (`/acesso/[token]`, Node runtime → grava
   cookie assinado `qam_ext_share_{projectId}`), sem login. Fonte da sessão
