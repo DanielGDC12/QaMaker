@@ -97,6 +97,11 @@ export const projectPoints = pgTable(
     createdByIsExternal: boolean("created_by_is_external")
       .default(false)
       .notNull(),
+    // Discriminador de origem: true = card criado pela extensão de navegador
+    // (tag "Extensão"). Pontos do checklist/UI nascem false.
+    createdViaExtension: boolean("created_via_extension")
+      .default(false)
+      .notNull(),
     // Somente exibição ("Atualizado por X"). Sem FK — pode ser um share.id.
     updatedBy: text("updated_by"),
   },

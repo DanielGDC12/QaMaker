@@ -124,6 +124,11 @@ export function PointCard({
               Qa Cliente
             </span>
           )}
+          {point.createdViaExtension && (
+            <span className={styles.extensao} title="Card criado pela extensão">
+              Extensão
+            </span>
+          )}
 
           {readOnly ? null : confirming ? (
             <span className={styles.confirm} data-no-drag>

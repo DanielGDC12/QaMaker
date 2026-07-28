@@ -97,6 +97,11 @@ export function PointDetailModal({
               Qa Cliente
             </span>
           )}
+          {point.createdViaExtension && (
+            <span className={styles.extensao} title="Card criado pela extensão">
+              Extensão
+            </span>
+          )}
         </div>
 
         <h2 className={styles.title}>{point.title}</h2>

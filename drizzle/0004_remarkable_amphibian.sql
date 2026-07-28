@@ -1,0 +1,1 @@
+ALTER TABLE "project_points" ADD COLUMN "created_via_extension" boolean DEFAULT false NOT NULL;

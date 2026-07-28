@@ -126,6 +126,7 @@ export async function getProjectPoints(
       updatedAt: projectPoints.updatedAt,
       createdBy: projectPoints.createdBy,
       createdByIsExternal: projectPoints.createdByIsExternal,
+      createdViaExtension: projectPoints.createdViaExtension,
       updatedBy: projectPoints.updatedBy,
       createdByDisplayName: createdByShare.displayName,
       updatedByDisplayName: updatedByShare.displayName,
@@ -351,14 +352,16 @@ export async function listProjectsBasic(): Promise<
 /**
  * Cria um "card" (ponto manual) a partir da extensão, já com imagem e descrição.
  * O autor é sempre um usuário FG (dono do token), logo `isExternal` = false.
- * O ponto entra no fim da lista (maior display_order + 1).
+ * A descrição vai para `subtitle` (campo que a UI exibe como descrição do ponto).
+ * `createdViaExtension` marca a origem para a tag "Extensão". O ponto entra no
+ * fim da lista (maior display_order + 1).
  */
 export async function createExtensionCard(
   projectId: string,
   data: {
     category: Category;
     title: string;
-    notes: string | null;
+    description: string | null;
     errorImageUrl: string;
   },
   createdBy: string
@@ -370,13 +373,13 @@ export async function createExtensionCard(
       projectId,
       category: data.category,
       title: data.title,
-      subtitle: null,
+      subtitle: data.description,
       displayOrder,
       status: "pendente",
       errorImageUrl: data.errorImageUrl,
-      notes: data.notes,
       createdBy,
       createdByIsExternal: false,
+      createdViaExtension: true,
       updatedBy: createdBy,
     })
     .returning();

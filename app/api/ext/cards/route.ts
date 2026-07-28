@@ -71,7 +71,7 @@ export async function POST(request: Request) {
       {
         category,
         title,
-        notes: description || null,
+        description: description || null,
         errorImageUrl: blob.url,
       },
       caller.email
