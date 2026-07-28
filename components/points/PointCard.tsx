@@ -171,10 +171,32 @@ export function PointCard({
         </div>
         <h3 className={styles.title}>{point.title}</h3>
         {point.subtitle && <p className={styles.subtitle}>{point.subtitle}</p>}
-        {updatedByLabel && (
-          <p className={styles.audit} title={updatedByLabel}>
-            Atualizado por {updatedByLabel} · {formatWhen(point.updatedAt)}
-          </p>
+        {(updatedByLabel || point.commentCount > 0) && (
+        <div className={styles.footRow}>
+          {updatedByLabel && (
+            <p className={styles.audit} title={updatedByLabel}>
+              Atualizado por {updatedByLabel} · {formatWhen(point.updatedAt)}
+            </p>
+          )}
+          {point.commentCount > 0 && (
+            <span
+              className={styles.commentBadge}
+              title={`${point.commentCount} comentário(s)`}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M21 12a8 8 0 01-8 8H5l-2 2V6a8 8 0 018-8 8 8 0 018 8z"
+                  transform="translate(1 2)"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {point.commentCount}
+            </span>
+          )}
+        </div>
         )}
       </div>
 

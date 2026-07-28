@@ -7,6 +7,7 @@ import {
   projectShares,
   users,
   apiTokens,
+  pointComments,
 } from "./schema";
 import type { PointStatus, Category } from "@/lib/constants";
 import { DEFAULT_PROJECT_POINTS } from "@/lib/default-points";
@@ -92,6 +93,7 @@ export async function getProjectPoint(pointId: string) {
 export type ProjectPointWithActor = typeof projectPoints.$inferSelect & {
   createdByDisplayName: string | null;
   updatedByDisplayName: string | null;
+  commentCount: number;
 };
 
 /**
@@ -130,6 +132,7 @@ export async function getProjectPoints(
       updatedBy: projectPoints.updatedBy,
       createdByDisplayName: createdByShare.displayName,
       updatedByDisplayName: updatedByShare.displayName,
+      commentCount: sql<number>`(select count(*)::int from ${pointComments} where ${pointComments.pointId} = ${projectPoints.id})`,
     })
     .from(projectPoints)
     .leftJoin(
@@ -441,4 +444,76 @@ export async function resolveApiToken(
     // atualização de telemetria não deve derrubar a autenticação
   }
   return row.email;
+}
+
+/* ── Comentários por ponto ────────────────────────────────── */
+
+/** Comentário já com o nome/avatar do autor resolvido (FG ou externo). */
+export interface PointCommentView {
+  id: string;
+  body: string;
+  createdAt: Date;
+  authorId: string;
+  authorIsExternal: boolean;
+  authorName: string;
+  authorAvatar: string | null;
+}
+
+/** Lista os comentários de um ponto (mais antigos primeiro), com autor. */
+export async function listPointComments(
+  pointId: string
+): Promise<PointCommentView[]> {
+  const authorShare = alias(projectShares, "comment_author_share");
+  const rows = await db
+    .select({
+      id: pointComments.id,
+      body: pointComments.body,
+      createdAt: pointComments.createdAt,
+      authorId: pointComments.authorId,
+      authorIsExternal: pointComments.authorIsExternal,
+      fgName: users.name,
+      fgAvatar: users.avatarUrl,
+      extName: authorShare.displayName,
+    })
+    .from(pointComments)
+    .leftJoin(users, eq(pointComments.authorId, users.email))
+    .leftJoin(authorShare, sql`${pointComments.authorId} = ${authorShare.id}::text`)
+    .where(eq(pointComments.pointId, pointId))
+    .orderBy(asc(pointComments.createdAt));
+
+  return rows.map((r) => ({
+    id: r.id,
+    body: r.body,
+    createdAt: r.createdAt,
+    authorId: r.authorId,
+    authorIsExternal: r.authorIsExternal,
+    authorName:
+      r.extName ?? r.fgName ?? r.authorId.split("@")[0] ?? "Desconhecido",
+    authorAvatar: r.authorIsExternal ? null : r.fgAvatar ?? null,
+  }));
+}
+
+/** Insere um comentário e retorna a linha crua. */
+export async function addPointComment(data: {
+  pointId: string;
+  authorId: string;
+  authorIsExternal: boolean;
+  body: string;
+}) {
+  const [row] = await db.insert(pointComments).values(data).returning();
+  return row;
+}
+
+/** Busca um comentário por id (para checagem de posse na exclusão). */
+export async function getPointComment(id: string) {
+  const [row] = await db
+    .select()
+    .from(pointComments)
+    .where(eq(pointComments.id, id));
+  return row ?? null;
+}
+
+/** Exclui um comentário. */
+export async function deletePointComment(id: string) {
+  await db.delete(pointComments).where(eq(pointComments.id, id));
 }

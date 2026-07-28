@@ -111,6 +111,27 @@ export const projectPoints = pgTable(
   ]
 );
 
+/* ── Comentários por ponto (thread de discussão / justificativas) ──
+   Autor polimórfico como em project_points.created_by: e-mail FG (users.email)
+   OU project_shares.id (ator externo). Sem FK — os dois espaços de valores são
+   disjuntos (e-mail vs UUID). Cascade: some junto com o ponto. */
+export const pointComments = pgTable(
+  "point_comments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    pointId: uuid("point_id")
+      .notNull()
+      .references(() => projectPoints.id, { onDelete: "cascade" }),
+    authorId: text("author_id").notNull(),
+    authorIsExternal: boolean("author_is_external").default(false).notNull(),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (t) => [index("idx_point_comments_point").on(t.pointId)]
+);
+
 /* ── Tokens de API (autenticação da extensão de navegador) ─── */
 export const apiTokens = pgTable(
   "api_tokens",
@@ -166,3 +187,5 @@ export type ProjectShare = typeof projectShares.$inferSelect;
 export type NewProjectShare = typeof projectShares.$inferInsert;
 export type ApiToken = typeof apiTokens.$inferSelect;
 export type NewApiToken = typeof apiTokens.$inferInsert;
+export type PointComment = typeof pointComments.$inferSelect;
+export type NewPointComment = typeof pointComments.$inferInsert;

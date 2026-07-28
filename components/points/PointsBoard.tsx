@@ -443,6 +443,7 @@ export function PointsBoard({
             number={numberOf.get(open.id) ?? 0}
             pending={pendingId === open.id}
             viewerType={viewerType}
+            currentShareId={currentShareId}
             editable={canEditPoint(open)}
             onStatusChange={(s) => changeStatus(open.id, s)}
             onClose={() => setOpenId(null)}
