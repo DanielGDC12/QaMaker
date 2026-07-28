@@ -234,8 +234,8 @@ export async function addCommentAction(
 }
 
 /**
- * Exclui um comentário. FG exclui qualquer; externo só os próprios.
- * Retorna a lista atualizada do ponto.
+ * Exclui um comentário — SOMENTE o próprio autor pode (nem FG apaga o de
+ * terceiros). Retorna a lista atualizada do ponto.
  */
 export async function deleteCommentAction(
   projectId: string,
@@ -250,11 +250,12 @@ export async function deleteCommentAction(
     const point = await getProjectPoint(comment.pointId);
     assertCanView(actor, point, projectId);
 
-    const isOwner =
-      actor.type === "external"
-        ? comment.authorIsExternal && comment.authorId === actor.shareId
-        : true; // FG pode excluir qualquer comentário
-    if (!isOwner) throw new AccessDeniedError();
+    // Só o autor: id igual E mesmo "espaço" (FG vs externo). E-mails e UUIDs
+    // são disjuntos, mas a checagem de isExternal é defesa extra.
+    const isAuthor =
+      comment.authorId === actorId(actor) &&
+      comment.authorIsExternal === (actor.type === "external");
+    if (!isAuthor) throw new AccessDeniedError();
 
     await deletePointComment(commentId);
     revalidatePath(`/projetos/${projectId}`);

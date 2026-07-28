@@ -31,13 +31,22 @@ function relTime(d: Date | string): string {
   return whenFmt.format(date);
 }
 
+/** Identidade do visitante atual — para atribuir/apagar comentários. */
+export interface Viewer {
+  /** e-mail (FG) ou share.id (externo) — casa com `authorId` do comentário. */
+  id: string;
+  name: string;
+  avatar: string | null;
+  isExternal: boolean;
+}
+
 interface Props {
   point: ProjectPointWithActor;
   number: number;
   pending?: boolean;
   viewerType: "fg" | "external";
-  /** share.id do visitante externo (para decidir posse de comentário); null se FG. */
-  currentShareId?: string | null;
+  /** Identidade do visitante (autor de novos comentários / dono na exclusão). */
+  viewer: Viewer;
   /** true se o visitante pode editar este ponto (FG ou dono externo). */
   editable: boolean;
   onStatusChange: (status: PointStatus) => void;
@@ -49,7 +58,7 @@ export function PointDetailModal({
   number,
   pending,
   viewerType,
-  currentShareId = null,
+  viewer,
   editable,
   onStatusChange,
   onClose,
@@ -85,29 +94,52 @@ export function PointDetailModal({
     const text = body.trim();
     if (!text) return;
     setError(null);
+
+    // Exibição otimista: o comentário aparece na hora, sem esperar o servidor.
+    const tempId = `tmp-${Date.now()}`;
+    const optimistic: PointCommentView = {
+      id: tempId,
+      body: text,
+      createdAt: new Date(),
+      authorId: viewer.id,
+      authorIsExternal: viewer.isExternal,
+      authorName: viewer.name,
+      authorAvatar: viewer.avatar,
+    };
+    setComments((prev) => [...(prev ?? []), optimistic]);
+    setBody("");
+
     startTransition(async () => {
       const res = await addCommentAction(point.projectId, point.id, text);
       if ("ok" in res) {
-        setComments(res.comments);
-        setBody("");
+        setComments(res.comments); // reconcilia com o servidor (ids reais)
       } else {
         setError(res.error);
+        setComments((prev) => prev?.filter((c) => c.id !== tempId) ?? prev);
+        setBody(text); // devolve o texto para o usuário reenviar
       }
     });
   }
 
   function remove(commentId: string) {
     setError(null);
+    // Remoção otimista.
+    const snapshot = comments;
+    setComments((prev) => prev?.filter((c) => c.id !== commentId) ?? prev);
+
     startTransition(async () => {
       const res = await deleteCommentAction(point.projectId, commentId);
       if ("ok" in res) setComments(res.comments);
-      else setError(res.error);
+      else {
+        setError(res.error);
+        setComments(snapshot); // reverte
+      }
     });
   }
 
+  /** Só o autor apaga o próprio comentário (mesmo id e mesmo espaço FG/externo). */
   function canDelete(c: PointCommentView): boolean {
-    if (viewerType === "fg") return true;
-    return c.authorIsExternal && c.authorId === currentShareId;
+    return c.authorId === viewer.id && c.authorIsExternal === viewer.isExternal;
   }
 
   // Ctrl/Cmd+Enter envia.

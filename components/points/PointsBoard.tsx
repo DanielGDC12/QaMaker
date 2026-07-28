@@ -3,7 +3,7 @@
 import { useOptimistic, startTransition, useState, type DragEvent } from "react";
 import { ProgressBar, Pill } from "@/components/ui";
 import { PointCard } from "./PointCard";
-import { PointDetailModal } from "./PointDetailModal";
+import { PointDetailModal, type Viewer } from "./PointDetailModal";
 import { StatusDropdown } from "./StatusDropdown";
 import { Toast } from "@/components/ui/Toast";
 import {
@@ -22,6 +22,8 @@ interface Props {
   viewerType: "fg" | "external";
   /** share.id do visitante externo (para decidir posse); null se FG. */
   currentShareId: string | null;
+  /** Identidade do visitante (autor de comentários). */
+  viewer: Viewer;
 }
 
 type Action =
@@ -56,6 +58,7 @@ export function PointsBoard({
   initialPoints,
   viewerType,
   currentShareId,
+  viewer,
 }: Props) {
   const [points, applyOptimistic] = useOptimistic(
     initialPoints,
@@ -443,7 +446,7 @@ export function PointsBoard({
             number={numberOf.get(open.id) ?? 0}
             pending={pendingId === open.id}
             viewerType={viewerType}
-            currentShareId={currentShareId}
+            viewer={viewer}
             editable={canEditPoint(open)}
             onStatusChange={(s) => changeStatus(open.id, s)}
             onClose={() => setOpenId(null)}

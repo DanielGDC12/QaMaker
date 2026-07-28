@@ -5,7 +5,7 @@ import {
   getProjectPoints,
   listSharesForProject,
 } from "@/lib/db/queries";
-import { requireProjectActor, type Actor } from "@/lib/auth-guard";
+import { requireProjectActor, getFGUser, type Actor } from "@/lib/auth-guard";
 import { PointsBoard } from "@/components/points/PointsBoard";
 import { AddPointButton } from "@/components/points/AddPointButton";
 import { DeleteProjectButton } from "@/components/projects/DeleteProjectButton";
@@ -46,6 +46,23 @@ export default async function ProjetoDetalhePage({
   const isFG = actor.type === "fg";
   const points = await getProjectPoints(id, actor);
   const shares = isFG ? await listSharesForProject(id) : [];
+
+  // Identidade do visitante para atribuir/apagar comentários (autor).
+  const fgUser = isFG ? await getFGUser() : null;
+  const viewer =
+    actor.type === "fg"
+      ? {
+          id: actor.email,
+          name: fgUser?.name ?? actor.email,
+          avatar: fgUser?.image ?? null,
+          isExternal: false,
+        }
+      : {
+          id: actor.shareId,
+          name: actor.displayName,
+          avatar: null,
+          isExternal: true,
+        };
 
   return (
     <main className={styles.main}>
@@ -89,6 +106,7 @@ export default async function ProjetoDetalhePage({
           initialPoints={points}
           viewerType={actor.type}
           currentShareId={actor.type === "external" ? actor.shareId : null}
+          viewer={viewer}
         />
       )}
     </main>
