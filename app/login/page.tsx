@@ -1,7 +1,7 @@
+import Image from "next/image";
 import { signIn } from "@/auth";
 import { FG_DOMAIN } from "@/lib/auth-domain";
 import { Button } from "@/components/ui";
-import { FgMark } from "@/components/layout/FgMark";
 import styles from "./login.module.css";
 
 export const metadata = { title: "Entrar · QA Maker" };
@@ -16,8 +16,14 @@ export default function LoginPage() {
     <main className={styles.wrap}>
       <div className={styles.card}>
         <div className={styles.brand}>
-          <FgMark size={30} className={styles.mark} />
-          <span className={styles.word}>QA Maker</span>
+          <Image
+            src="/logo.png"
+            alt="QA Maker"
+            width={1693}
+            height={929}
+            priority
+            className={styles.logo}
+          />
         </div>
         <h1 className={styles.title}>Auditorias de qualidade da Agência FG</h1>
         <p className={styles.lead}>

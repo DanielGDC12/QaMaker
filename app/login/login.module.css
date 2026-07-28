@@ -25,18 +25,12 @@
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.625rem;
   margin-bottom: 1.5rem;
 }
-.mark {
+.logo {
+  width: 140px;
+  height: auto;
   display: block;
-  color: var(--fg-vermelho);
-}
-.word {
-  font-size: 1.0625rem;
-  font-weight: var(--fw-semibold);
-  letter-spacing: var(--tracking-snug);
-  color: var(--fg-bordo-ink);
 }
 
 .title {
