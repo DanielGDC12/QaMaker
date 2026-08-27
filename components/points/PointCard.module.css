@@ -19,6 +19,13 @@
   outline-offset: 2px;
 }
 
+/* Card do checklist padrão da FG — faixa de marca à esquerda. */
+.checklistCard {
+  border-left: 3px solid var(--fg-vermelho);
+  border-top-left-radius: var(--radius-sm);
+  border-bottom-left-radius: var(--radius-sm);
+}
+
 /* Kanban: card arrastável */
 .draggable {
   cursor: grab;
@@ -126,6 +133,21 @@
   color: var(--fg-rosa);
   background: var(--pink-weak);
   border: 1px solid var(--fg-rosa);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-pill);
+}
+
+/* Selo do checklist padrão — presente também quando o card já saiu da coluna. */
+.checklistTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-white);
+  background: var(--fg-vermelho);
   padding: 0.15rem 0.45rem;
   border-radius: var(--radius-pill);
 }

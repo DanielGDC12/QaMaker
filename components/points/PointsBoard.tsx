@@ -10,6 +10,12 @@ import {
   calcProgress,
   CATEGORIES,
   POINT_STATUS_META,
+  BOARD_COLUMN_ORDER,
+  CHECKLIST_COLUMN,
+  boardColumnOf,
+  boardColumnMeta,
+  statusForDrop,
+  type BoardColumn,
   type PointStatus,
 } from "@/lib/constants";
 import type { ProjectPointWithActor } from "@/lib/db/queries";
@@ -31,14 +37,6 @@ type Action =
   | { type: "delete"; id: string };
 
 type View = "kanban" | "lista";
-
-/** Ordem das colunas do Kanban (status). */
-const COLUMN_ORDER: readonly PointStatus[] = [
-  "pendente",
-  "iniciado",
-  "feito",
-  "nao_possivel",
-];
 
 /** Índice da página na ordem canônica; desconhecidas vão para o fim. */
 function catOrder(cat: string) {
@@ -75,7 +73,7 @@ export function PointsBoard({
   const [activeCategory, setActiveCategory] = useState<string>("todos");
   const [view, setView] = useState<View>("kanban");
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragOverStatus, setDragOverStatus] = useState<PointStatus | null>(null);
+  const [dragOverColumn, setDragOverColumn] = useState<BoardColumn | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
 
   const { pct, done, total } = calcProgress(points);
@@ -95,6 +93,13 @@ export function PointsBoard({
     ordered.some((p) => p.category === cat)
   );
 
+  // A coluna "Checklist FG" só existe se o projeto tiver checklist padrão —
+  // projetos antigos e o ator externo (que só enxerga pontos externos) não a veem.
+  const hasChecklist = ordered.some((p) => p.isDefault);
+  const boardColumns = BOARD_COLUMN_ORDER.filter(
+    (c) => c !== CHECKLIST_COLUMN || hasChecklist
+  );
+
   // Busca ativa → pesquisa em tudo (ignora o chip). Sem busca → filtra pelo chip.
   const normalizedQuery = query.trim().toLowerCase();
   const visiblePoints = normalizedQuery
@@ -106,6 +111,9 @@ export function PointsBoard({
     : activeCategory === "todos"
       ? ordered
       : ordered.filter((p) => p.category === activeCategory);
+
+  // Progresso do checklist padrão dentro do recorte visível (acompanha o filtro).
+  const checklist = calcProgress(visiblePoints.filter((p) => p.isDefault));
 
   function canEditPoint(point: ProjectPointWithActor) {
     // FG age em tudo; externo só nos pontos que ele mesmo criou.
@@ -142,30 +150,50 @@ export function PointsBoard({
   }
 
   // ── Drag & drop: mover card entre colunas = mudar status ─────────────
+  const draggingPoint = draggingId
+    ? points.find((p) => p.id === draggingId) ?? null
+    : null;
+
+  /**
+   * A coluna aceita o card em arraste? Aceita a coluna de origem (drop = no-op)
+   * e qualquer destino permitido por `statusForDrop` — que barra o checklist
+   * de sair para "pendente"/"iniciado" e os pontos avulsos de entrar nele.
+   */
+  function columnAcceptsDrag(column: BoardColumn) {
+    if (!draggingPoint) return false;
+    return (
+      boardColumnOf(draggingPoint) === column ||
+      statusForDrop(draggingPoint, column) !== null
+    );
+  }
+
   function onCardDragStart(pointId: string) {
     setDraggingId(pointId);
   }
   function onCardDragEnd() {
     setDraggingId(null);
-    setDragOverStatus(null);
+    setDragOverColumn(null);
   }
-  function onColumnDragOver(e: DragEvent, status: PointStatus) {
+  function onColumnDragOver(e: DragEvent, column: BoardColumn) {
     if (!draggingId) return; // só reage a arraste de card
+    // Coluna proibida: sem preventDefault o browser já mostra "não permitido".
+    if (!columnAcceptsDrag(column)) {
+      if (dragOverColumn !== null) setDragOverColumn(null); // solta o destaque
+      return;
+    }
     e.preventDefault();
     e.dataTransfer.dropEffect = "move";
-    if (dragOverStatus !== status) setDragOverStatus(status);
+    if (dragOverColumn !== column) setDragOverColumn(column);
   }
-  function onColumnDrop(e: DragEvent, status: PointStatus) {
+  function onColumnDrop(e: DragEvent, column: BoardColumn) {
     e.preventDefault();
-    const id = draggingId;
+    const point = draggingPoint;
     setDraggingId(null);
-    setDragOverStatus(null);
-    if (!id) return;
-    const point = points.find((p) => p.id === id);
-    // Só persiste se mudou de status e o ator pode editar este ponto.
-    if (point && point.status !== status && canEditPoint(point)) {
-      changeStatus(id, status);
-    }
+    setDragOverColumn(null);
+    if (!point || !canEditPoint(point)) return;
+    // null = movimento proibido ou sem efeito (mesma coluna).
+    const next = statusForDrop(point, column);
+    if (next) changeStatus(point.id, next);
   }
 
   return (
@@ -312,16 +340,28 @@ export function PointsBoard({
         </div>
       ) : view === "kanban" ? (
         <div className={styles.board}>
-          {COLUMN_ORDER.map((status) => {
-            const meta = POINT_STATUS_META[status];
-            const cards = visiblePoints.filter((p) => p.status === status);
-            const isOver = dragOverStatus === status && draggingId !== null;
+          {boardColumns.map((column) => {
+            const meta = boardColumnMeta(column);
+            const isChecklist = column === CHECKLIST_COLUMN;
+            const cards = visiblePoints.filter(
+              (p) => boardColumnOf(p) === column
+            );
+            const isOver = dragOverColumn === column && draggingId !== null;
+            // Durante o arraste, sinaliza as colunas que recusam este card.
+            const isBlocked = draggingId !== null && !columnAcceptsDrag(column);
             return (
               <section
-                key={status}
-                className={`${styles.column} ${isOver ? styles.columnOver : ""}`}
-                onDragOver={(e) => onColumnDragOver(e, status)}
-                onDrop={(e) => onColumnDrop(e, status)}
+                key={column}
+                className={[
+                  styles.column,
+                  isChecklist ? styles.columnChecklist : "",
+                  isOver ? styles.columnOver : "",
+                  isBlocked ? styles.columnBlocked : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ")}
+                onDragOver={(e) => onColumnDragOver(e, column)}
+                onDrop={(e) => onColumnDrop(e, column)}
               >
                 <div className={styles.columnHead}>
                   <span
@@ -331,6 +371,14 @@ export function PointsBoard({
                   <span className={styles.columnLabel}>{meta.label}</span>
                   <span className={styles.columnCount}>{cards.length}</span>
                 </div>
+                {isChecklist && (
+                  <div className={styles.checklistProgress}>
+                    <span className={styles.checklistCount}>
+                      {checklist.done} de {checklist.total} auditados
+                    </span>
+                    <ProgressBar value={checklist.pct} />
+                  </div>
+                )}
                 <div className={styles.columnBody}>
                   {cards.map((point) => {
                     const editable = canEditPoint(point);
@@ -354,7 +402,13 @@ export function PointsBoard({
                   })}
                   {cards.length === 0 && (
                     <div className={styles.columnEmpty}>
-                      {draggingId ? "Solte aqui" : "Sem pontos"}
+                      {isChecklist
+                        ? checklist.total > 0
+                          ? "Checklist concluído 🎉"
+                          : "Sem pontos"
+                        : draggingId
+                          ? "Solte aqui"
+                          : "Sem pontos"}
                     </div>
                   )}
                 </div>
@@ -383,7 +437,12 @@ export function PointsBoard({
                   {String(numberOf.get(point.id) ?? 0).padStart(2, "0")}
                 </span>
                 <div className={styles.listPoint}>
-                  <span className={styles.listTitle}>{point.title}</span>
+                  <span className={styles.listTitle}>
+                    {point.isDefault && (
+                      <span className={styles.listChecklistTag}>Checklist FG</span>
+                    )}
+                    {point.title}
+                  </span>
                   {point.subtitle && (
                     <span className={styles.listDesc}>{point.subtitle}</span>
                   )}

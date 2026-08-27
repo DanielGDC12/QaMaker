@@ -200,6 +200,14 @@ export function PointDetailModal({
         <div className={styles.metaRow}>
           <span className={styles.num}>#{String(number).padStart(2, "0")}</span>
           <span className={styles.tag}>{point.category}</span>
+          {point.isDefault && (
+            <span
+              className={styles.checklistTag}
+              title="Item do checklist padrão da FG"
+            >
+              Checklist FG
+            </span>
+          )}
           {showQaCliente && (
             <span className={styles.qaCliente} title="Ponto criado pelo cliente">
               Qa Cliente

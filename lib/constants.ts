@@ -37,6 +37,74 @@ export const SELECTABLE_STATUSES: readonly PointStatus[] = [
   "nao_possivel",
 ];
 
+/* ── Colunas do Kanban ────────────────────────────────────────
+   O board NÃO é 1:1 com o status: o checklist padrão da FG
+   (`project_points.is_default`, cópia de DEFAULT_PROJECT_POINTS) fica retido
+   numa coluna própria — "Checklist FG" — enquanto não for auditado. Só os
+   status de conclusão (DONE_STATUSES) tiram o ponto de lá; "iniciado" muda
+   apenas o pill do card. Pontos criados à mão nunca entram nessa coluna. */
+
+export const CHECKLIST_COLUMN = "checklist" as const;
+
+/** Uma coluna do board: a do checklist, ou uma coluna de status. */
+export type BoardColumn = typeof CHECKLIST_COLUMN | PointStatus;
+
+/** Ordem das colunas do Kanban (o checklist vem primeiro, em destaque). */
+export const BOARD_COLUMN_ORDER: readonly BoardColumn[] = [
+  CHECKLIST_COLUMN,
+  "pendente",
+  "iniciado",
+  "feito",
+  "nao_possivel",
+];
+
+export const CHECKLIST_COLUMN_META = {
+  label: "Checklist FG",
+  color: "var(--fg-vermelho)",
+  weak: "var(--bordo-weak)",
+};
+
+/** Label/cor de qualquer coluna do board (checklist ou status). */
+export function boardColumnMeta(column: BoardColumn) {
+  return column === CHECKLIST_COLUMN
+    ? CHECKLIST_COLUMN_META
+    : POINT_STATUS_META[column];
+}
+
+/** Ponto na visão do board — o mínimo para decidir coluna e movimento. */
+export interface BoardPoint {
+  status: PointStatus;
+  isDefault: boolean;
+}
+
+/** Em que coluna este ponto aparece. */
+export function boardColumnOf(point: BoardPoint): BoardColumn {
+  return point.isDefault && !DONE_STATUSES.includes(point.status)
+    ? CHECKLIST_COLUMN
+    : point.status;
+}
+
+/**
+ * Status resultante de soltar `point` na coluna `column` — ou `null` quando o
+ * movimento é proibido (ou não muda nada). Regras:
+ * - ponto do checklist só sai da coluna dele para "feito"/"nao_possivel";
+ *   soltar de volta em "Checklist FG" reabre o ponto (volta a "pendente");
+ * - ponto criado à mão nunca entra na coluna do checklist.
+ */
+export function statusForDrop(
+  point: BoardPoint,
+  column: BoardColumn
+): PointStatus | null {
+  if (boardColumnOf(point) === column) return null; // já está aqui
+
+  if (column === CHECKLIST_COLUMN) {
+    return point.isDefault ? "pendente" : null;
+  }
+  if (point.isDefault && !DONE_STATUSES.includes(column)) return null;
+
+  return column === point.status ? null : column;
+}
+
 /* ── Categorias (tags) dos pontos ─────────────────────────── */
 export const CATEGORIES = [
   "Home",

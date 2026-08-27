@@ -210,6 +210,45 @@
   background: var(--pink-weak);
   box-shadow: inset 0 0 0 2px var(--fg-rosa);
 }
+/* Durante o arraste: coluna que recusa este card (checklist só sai para
+   "Feito"/"Não possível"; ponto avulso nunca entra no checklist). */
+.columnBlocked {
+  opacity: 0.45;
+}
+
+/* ── Coluna do checklist padrão da FG (em destaque) ───────── */
+.columnChecklist {
+  background: var(--bordo-weak);
+  box-shadow: inset 0 0 0 2px var(--fg-vermelho);
+}
+.columnChecklist.columnOver {
+  background: var(--pink-weak);
+}
+.columnChecklist .columnLabel {
+  color: var(--fg-vermelho);
+  text-transform: uppercase;
+  font-size: 0.8125rem;
+  letter-spacing: 0.05em;
+}
+.columnChecklist .columnCount {
+  color: var(--fg-white);
+  background: var(--fg-vermelho);
+  border-color: var(--fg-vermelho);
+}
+.checklistProgress {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0 0.25rem 0.875rem;
+}
+.checklistCount {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--fg-cinza);
+  font-variant-numeric: tabular-nums;
+}
 .columnHead {
   display: flex;
   align-items: center;
@@ -326,6 +365,20 @@
   font-weight: var(--fw-semibold);
   letter-spacing: var(--tracking-snug);
   color: var(--fg-bordo-ink);
+}
+/* Selo do checklist padrão na vista em lista (espelha o do card). */
+.listChecklistTag {
+  display: inline-block;
+  margin-right: 0.4rem;
+  vertical-align: 1px;
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-white);
+  background: var(--fg-vermelho);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-pill);
 }
 .listDesc {
   font-size: 0.8125rem;

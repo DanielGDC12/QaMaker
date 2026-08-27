@@ -94,9 +94,14 @@ export function PointCard({
 
   return (
     <article
-      className={`${styles.card} ${canDrag ? styles.draggable : ""} ${
-        dragging ? styles.dragging : ""
-      }`}
+      className={[
+        styles.card,
+        point.isDefault ? styles.checklistCard : "",
+        canDrag ? styles.draggable : "",
+        dragging ? styles.dragging : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
       draggable={canDrag}
       onDragStart={canDrag ? handleDragStart : undefined}
       onDragEnd={canDrag ? onDragEnd : undefined}
@@ -119,6 +124,23 @@ export function PointCard({
         <div className={styles.meta}>
           <span className={styles.num}>{String(number).padStart(2, "0")}</span>
           <span className={styles.tag}>{point.category}</span>
+          {point.isDefault && (
+            <span
+              className={styles.checklistTag}
+              title="Item do checklist padrão da FG"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M4 12l5 5L20 6"
+                  stroke="currentColor"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Checklist
+            </span>
+          )}
           {showQaCliente && (
             <span className={styles.qaCliente} title="Ponto criado pelo cliente">
               Qa Cliente

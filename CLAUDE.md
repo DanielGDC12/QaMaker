@@ -29,6 +29,15 @@ Next.js 16 (App Router) · React 19 · Drizzle ORM + Neon (driver HTTP serverles
   template não altera projetos já criados. Pontos extras seguem sendo criados
   manualmente (`AddPointButton`), escolhendo a "página de QA" (categoria em
   `CATEGORIES`). O board agrupa por categoria na ordem canônica de `CATEGORIES`.
+- **Coluna "Checklist FG" do Kanban**: o board **não** é 1:1 com o status. Os
+  pontos do checklist padrão são marcados com `project_points.is_default`
+  (gravado só pelo `createProject`; ponto criado à mão nasce `false`) e ficam
+  retidos numa coluna própria enquanto não forem auditados — só `feito`/
+  `nao_possivel` (`DONE_STATUSES`) os movem para a coluna do status;
+  `iniciado` muda apenas o pill. Ponto avulso nunca entra nessa coluna;
+  soltar um ponto do checklist de volta nela reabre como `pendente`. Fonte
+  única: `boardColumnOf`/`statusForDrop` em `lib/constants.ts` — é regra de
+  layout do board, não de servidor (o dropdown segue oferecendo todo status).
 - **`display_order` de novos pontos** vem de `getMaxDisplayOrder(projectId)`
   (sem filtro por ator) — derivar da lista visível colidiria com o checklist
   padrão, já que o ator externo só enxerga os pontos externos.

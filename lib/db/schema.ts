@@ -108,6 +108,11 @@ export const projectPoints = pgTable(
     createdViaExtension: boolean("created_via_extension")
       .default(false)
       .notNull(),
+    // true = ponto copiado de DEFAULT_PROJECT_POINTS na criação do projeto.
+    // Governa a coluna "Checklist FG" do Kanban e a restrição de movimento
+    // (ver `boardColumnOf`/`statusForDrop` em lib/constants.ts). Pontos
+    // criados à mão (UI, extensão, ator externo) nascem false.
+    isDefault: boolean("is_default").default(false).notNull(),
     // Somente exibição ("Atualizado por X"). Sem FK — pode ser um share.id.
     updatedBy: text("updated_by"),
   },

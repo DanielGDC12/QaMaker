@@ -111,6 +111,18 @@
   border-radius: var(--radius-pill);
 }
 
+/* Selo do checklist padrão da FG (espelha o do card). */
+.checklistTag {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--fg-white);
+  background: var(--fg-vermelho);
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-pill);
+}
+
 .extensao {
   font-size: 0.625rem;
   font-weight: 700;

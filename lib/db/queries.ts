@@ -194,6 +194,7 @@ export async function getProjectPoints(
       createdBy: projectPoints.createdBy,
       createdByIsExternal: projectPoints.createdByIsExternal,
       createdViaExtension: projectPoints.createdViaExtension,
+      isDefault: projectPoints.isDefault,
       updatedBy: projectPoints.updatedBy,
       createdByDisplayName: createdByShare.displayName,
       updatedByDisplayName: updatedByShare.displayName,
@@ -241,6 +242,8 @@ export async function createProject(
         displayOrder: i + 1,
         createdBy,
         createdByIsExternal: false,
+        // Marca a origem: estes são os únicos pontos da coluna "Checklist FG".
+        isDefault: true,
         updatedBy: createdBy,
       }))
     ),
