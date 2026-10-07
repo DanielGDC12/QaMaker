@@ -208,7 +208,12 @@
   color: var(--fg-cinza, #8a7176);
 }
 
+/* Controles do card: status à esquerda, checkbox do Figma (FG) à direita. */
 .status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   padding-top: 0.125rem;
 }
 

@@ -4,7 +4,8 @@ import { UserBadge } from "@/components/layout/UserBadge";
 import { MainNav } from "@/components/layout/MainNav";
 import { getFGUser } from "@/lib/auth-guard";
 
-export default async function ConfiguracoesLayout({
+/** Aba "Checklist FG" — FG-only (o proxy já barra o externo; isto é a 2ª camada). */
+export default async function ChecklistLayout({
   children,
 }: {
   children: React.ReactNode;

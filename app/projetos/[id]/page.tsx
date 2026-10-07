@@ -11,6 +11,7 @@ import { PointsBoard } from "@/components/points/PointsBoard";
 import { AddPointButton } from "@/components/points/AddPointButton";
 import { DeleteProjectButton } from "@/components/projects/DeleteProjectButton";
 import { ResponsibleSelect } from "@/components/projects/ResponsibleSelect";
+import { ProjectLinks } from "@/components/projects/ProjectLinks";
 import { ShareManagementPanel } from "@/components/shares/ShareManagementPanel";
 import styles from "./detalhe.module.css";
 
@@ -82,7 +83,16 @@ export default async function ProjetoDetalhePage({
       )}
 
       <div className={styles.titleRow}>
-        <h1 className={styles.title}>{project.name}</h1>
+        <div className={styles.titleBlock}>
+          <h1 className={styles.title}>{project.name}</h1>
+          {isFG && (
+            <ProjectLinks
+              projectId={project.id}
+              figmaUrl={project.figmaUrl}
+              adminUrl={project.adminUrl}
+            />
+          )}
+        </div>
         <div className={styles.actions}>
           {isFG && (
             <ResponsibleSelect
@@ -94,7 +104,7 @@ export default async function ProjetoDetalhePage({
           {isFG && (
             <ShareManagementPanel projectId={project.id} shares={shares} />
           )}
-          <AddPointButton projectId={project.id} />
+          <AddPointButton projectId={project.id} showFigma={isFG} />
           {isFG && (
             <DeleteProjectButton
               projectId={project.id}

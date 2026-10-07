@@ -7,7 +7,14 @@ import { ACCEPT_ATTR, validateImageFile } from "@/lib/image";
 import { addPoint } from "@/app/projetos/[id]/actions";
 import styles from "./AddPointButton.module.css";
 
-export function AddPointButton({ projectId }: { projectId: string }) {
+export function AddPointButton({
+  projectId,
+  showFigma,
+}: {
+  projectId: string;
+  /** Exibe o checkbox "Previsto no Figma" (só FG — o externo não o vê). */
+  showFigma: boolean;
+}) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const selectRef = useRef<HTMLSelectElement>(null);
@@ -179,6 +186,14 @@ export function AddPointButton({ projectId }: { projectId: string }) {
             autoComplete="off"
             style={{resize:"none",height:"80px",boxSizing:"border-box"}}
           />
+
+          {showFigma && (
+            <label className={styles.check}>
+              <input type="checkbox" name="inFigma" className={styles.checkBox} />
+              Previsto no Figma inicial
+              <span className={styles.optional}>(de/para)</span>
+            </label>
+          )}
 
           <span className={styles.label}>
             Print <span className={styles.optional}>(opcional)</span>

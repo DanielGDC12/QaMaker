@@ -23,6 +23,7 @@ import {
   getPointComment,
   deletePointComment,
   setProjectResponsible,
+  setProjectLinks,
   userExists,
   getProjectProgress,
   getProjectName,
@@ -30,6 +31,7 @@ import {
 } from "@/lib/db/queries";
 import type { ProjectPoint } from "@/lib/db/schema";
 import { notifyResponsible } from "@/lib/slack";
+import { normalizeProjectUrl } from "@/lib/project-links";
 import {
   appOriginFromHeaders,
   pointStatusChangedMessage,
@@ -91,7 +93,8 @@ function assertCanMutate(
  * entra no fim da lista da sua página (display_order = maior atual + 1).
  * A imagem de erro é opcional e já vem enviada (URL do Blob) — o upload é
  * feito no cliente antes de chamar esta action, para a criação ser atômica.
- * Retorna o `pointId` criado. Permitido para FG e ator externo.
+ * Retorna o `pointId` criado. Permitido para FG e ator externo; o checkbox
+ * "Previsto no Figma" só é lido para FG (o externo nem o vê).
  */
 export async function addPoint(
   projectId: string,
@@ -105,6 +108,7 @@ export async function addPoint(
   const rawImage = String(formData.get("errorImageUrl") ?? "").trim();
   // Só aceitamos URL de Blob (https) vinda do nosso próprio endpoint de upload.
   const errorImageUrl = rawImage.startsWith("https://") ? rawImage : null;
+  const inFigma = actor.type === "fg" && formData.get("inFigma") === "on";
 
   if (!CATEGORIES.includes(category)) return { error: "Página inválida." };
   if (!title) return { error: "Informe o título do ponto." };
@@ -120,6 +124,7 @@ export async function addPoint(
       subtitle: subtitle || null,
       displayOrder: nextOrder,
       errorImageUrl,
+      inFigma,
     },
     { id: actorId(actor), isExternal: actor.type === "external" }
   );
@@ -217,6 +222,24 @@ export async function updatePointStatus(
 }
 
 /**
+ * Marca/desmarca o ponto como "previsto no Figma inicial" (de/para de escopo).
+ * SOMENTE FG — classificação interna; nunca use requireProjectActor aqui.
+ */
+export async function setPointInFigma(
+  projectId: string,
+  pointId: string,
+  inFigma: boolean
+) {
+  const user = await requireFGUser();
+
+  const point = await getProjectPoint(pointId);
+  if (!point || point.projectId !== projectId) throw new AccessDeniedError();
+
+  await updateProjectPoint(pointId, { inFigma: inFigma === true }, user.email);
+  revalidatePath(`/projetos/${projectId}`);
+}
+
+/**
  * Persiste (ou remove) a URL da imagem de erro de um ponto.
  * Ao trocar/remover, deleta o blob antigo (best-effort).
  */
@@ -271,6 +294,39 @@ export async function setResponsibleAction(
     return { ok: true };
   } catch {
     return { error: "Não foi possível definir o responsável." };
+  }
+}
+
+export interface ProjectLinksState {
+  error?: string;
+  ok?: boolean;
+}
+
+/**
+ * Salva os links de Figma e Admin do projeto (campo vazio remove o link).
+ * SOMENTE FG — nunca use requireProjectActor aqui: o externo não vê os links.
+ */
+export async function setProjectLinksAction(
+  projectId: string,
+  figmaUrl: string,
+  adminUrl: string
+): Promise<ProjectLinksState> {
+  try {
+    await requireFGUser();
+
+    const figma = normalizeProjectUrl(figmaUrl);
+    if (!figma.ok) return { error: `Figma: ${figma.error}` };
+    const admin = normalizeProjectUrl(adminUrl);
+    if (!admin.ok) return { error: `Admin: ${admin.error}` };
+
+    await setProjectLinks(projectId, {
+      figmaUrl: figma.url,
+      adminUrl: admin.url,
+    });
+    revalidatePath(`/projetos/${projectId}`);
+    return { ok: true };
+  } catch {
+    return { error: "Não foi possível salvar os links." };
   }
 }
 

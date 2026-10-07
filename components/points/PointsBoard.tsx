@@ -5,6 +5,7 @@ import { ProgressBar, Pill } from "@/components/ui";
 import { PointCard } from "./PointCard";
 import { PointDetailModal, type Viewer } from "./PointDetailModal";
 import { StatusDropdown } from "./StatusDropdown";
+import { FigmaCheckbox } from "./FigmaCheckbox";
 import { Toast } from "@/components/ui/Toast";
 import {
   calcProgress,
@@ -19,7 +20,11 @@ import {
   type PointStatus,
 } from "@/lib/constants";
 import type { ProjectPointWithActor } from "@/lib/db/queries";
-import { updatePointStatus, deletePoint } from "@/app/projetos/[id]/actions";
+import {
+  updatePointStatus,
+  deletePoint,
+  setPointInFigma,
+} from "@/app/projetos/[id]/actions";
 import styles from "./PointsBoard.module.css";
 
 interface Props {
@@ -34,6 +39,7 @@ interface Props {
 
 type Action =
   | { type: "status"; id: string; status: PointStatus }
+  | { type: "figma"; id: string; inFigma: boolean }
   | { type: "delete"; id: string };
 
 type View = "kanban" | "lista";
@@ -60,12 +66,15 @@ export function PointsBoard({
 }: Props) {
   const [points, applyOptimistic] = useOptimistic(
     initialPoints,
-    (state: ProjectPointWithActor[], action: Action) =>
-      action.type === "delete"
-        ? state.filter((p) => p.id !== action.id)
-        : state.map((p) =>
-            p.id === action.id ? { ...p, status: action.status } : p
-          )
+    (state: ProjectPointWithActor[], action: Action) => {
+      if (action.type === "delete")
+        return state.filter((p) => p.id !== action.id);
+      const patch =
+        action.type === "status"
+          ? { status: action.status }
+          : { inFigma: action.inFigma };
+      return state.map((p) => (p.id === action.id ? { ...p, ...patch } : p));
+    }
   );
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -133,6 +142,20 @@ export function PointsBoard({
         setError("Não foi possível salvar. Tente novamente.");
       } finally {
         setPendingId(null);
+      }
+    });
+  }
+
+  // De/para com o Figma: marcação interna, só FG altera.
+  const isFG = viewerType === "fg";
+  function changeInFigma(pointId: string, inFigma: boolean) {
+    setError(null);
+    startTransition(async () => {
+      applyOptimistic({ type: "figma", id: pointId, inFigma });
+      try {
+        await setPointInFigma(projectId, pointId, inFigma);
+      } catch {
+        setError("Não foi possível salvar. Tente novamente.");
       }
     });
   }
@@ -396,6 +419,9 @@ export function PointsBoard({
                         onDragEnd={onCardDragEnd}
                         onOpen={() => setOpenId(point.id)}
                         onStatusChange={(s) => changeStatus(point.id, s)}
+                        onInFigmaChange={
+                          isFG ? (v) => changeInFigma(point.id, v) : undefined
+                        }
                         onDelete={() => removePoint(point.id)}
                       />
                     );
@@ -417,11 +443,12 @@ export function PointsBoard({
           })}
         </div>
       ) : (
-        <div className={styles.listWrap}>
+        <div className={`${styles.listWrap} ${isFG ? styles.listWithFigma : ""}`}>
           <div className={styles.listHead}>
             <span>#</span>
             <span>Ponto</span>
             <span>Página</span>
+            {isFG && <span title="Previsto no Figma inicial">Figma</span>}
             <span>Status</span>
             <span>Atualização</span>
             <span />
@@ -455,6 +482,14 @@ export function PointsBoard({
                     dot={false}
                   />
                 </span>
+                {isFG && (
+                  <span>
+                    <FigmaCheckbox
+                      checked={point.inFigma}
+                      onChange={(v) => changeInFigma(point.id, v)}
+                    />
+                  </span>
+                )}
                 <span>
                   {editable ? (
                     <StatusDropdown
@@ -508,6 +543,9 @@ export function PointsBoard({
             viewer={viewer}
             editable={canEditPoint(open)}
             onStatusChange={(s) => changeStatus(open.id, s)}
+            onInFigmaChange={
+              isFG ? (v) => changeInFigma(open.id, v) : undefined
+            }
             onClose={() => setOpenId(null)}
           />
         );
