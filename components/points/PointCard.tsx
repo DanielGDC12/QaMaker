@@ -8,6 +8,7 @@ import {
 } from "react";
 import { StatusDropdown } from "./StatusDropdown";
 import { ImageSlot } from "./ImageSlot";
+import { FigmaCheckbox } from "./FigmaCheckbox";
 import { POINT_STATUS_META, type PointStatus } from "@/lib/constants";
 import type { ProjectPointWithActor } from "@/lib/db/queries";
 import styles from "./PointCard.module.css";
@@ -28,6 +29,8 @@ interface Props {
   /** Abre o modal de detalhe (clique no corpo do card). */
   onOpen?: () => void;
   onStatusChange: (status: PointStatus) => void;
+  /** De/para com o Figma — só passado para FG (o externo não vê o checkbox). */
+  onInFigmaChange?: (inFigma: boolean) => void;
   onDelete: () => void;
 }
 
@@ -55,6 +58,7 @@ export function PointCard({
   onDragEnd,
   onOpen,
   onStatusChange,
+  onInFigmaChange,
   onDelete,
 }: Props) {
   const [confirming, setConfirming] = useState(false);
@@ -236,6 +240,13 @@ export function PointCard({
             value={point.status}
             pending={pending}
             onChange={onStatusChange}
+          />
+        )}
+        {onInFigmaChange && (
+          <FigmaCheckbox
+            checked={point.inFigma}
+            onChange={onInFigmaChange}
+            label="Figma"
           />
         )}
       </div>

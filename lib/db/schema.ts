@@ -42,6 +42,11 @@ export const projects = pgTable(
     // Responsável pelo projeto (usuário FG). Nullable: projetos podem ficar sem
     // dono. Só e-mail FG (users.email) — o ator externo nunca é responsável.
     responsibleEmail: text("responsible_email").references(() => users.email),
+    // Links de referência do projeto (FG-only — o ator externo nunca os vê).
+    // Só URL http(s) normalizada por `normalizeProjectUrl`; credenciais do
+    // admin ficam fora do sistema de propósito.
+    figmaUrl: text("figma_url"),
+    adminUrl: text("admin_url"),
   },
   (t) => [index("idx_projects_created_by").on(t.createdBy)]
 );
@@ -108,11 +113,15 @@ export const projectPoints = pgTable(
     createdViaExtension: boolean("created_via_extension")
       .default(false)
       .notNull(),
-    // true = ponto copiado de DEFAULT_PROJECT_POINTS na criação do projeto.
+    // true = ponto copiado do checklist_template_items na criação do projeto.
     // Governa a coluna "Checklist FG" do Kanban e a restrição de movimento
     // (ver `boardColumnOf`/`statusForDrop` em lib/constants.ts). Pontos
     // criados à mão (UI, extensão, ator externo) nascem false.
     isDefault: boolean("is_default").default(false).notNull(),
+    // De/para com o layout: true = o item já estava previsto no Figma inicial
+    // (bug de implementação); false = fora do Figma (pedido novo). Marcação
+    // interna da FG — o ator externo não vê nem altera.
+    inFigma: boolean("in_figma").default(false).notNull(),
     // Somente exibição ("Atualizado por X"). Sem FK — pode ser um share.id.
     updatedBy: text("updated_by"),
   },
@@ -142,6 +151,26 @@ export const pointComments = pgTable(
   },
   (t) => [index("idx_point_comments_point").on(t.pointId)]
 );
+
+/* ── Checklist FG (template dos itens fixos) ──────────────────
+   Itens que todo projeto novo recebe, editáveis na aba /checklist. O
+   `createProject` COPIA estas linhas para project_points (is_default = true):
+   editar o template só afeta projetos criados depois. */
+export const checklistTemplateItems = pgTable("checklist_template_items", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  category: text("category").notNull(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  displayOrder: integer("display_order").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  // E-mail FG de quem editou por último (somente exibição).
+  updatedBy: text("updated_by"),
+});
 
 /* ── Tokens de API (autenticação da extensão de navegador) ─── */
 export const apiTokens = pgTable(
@@ -206,3 +235,4 @@ export type ApiToken = typeof apiTokens.$inferSelect;
 export type NewApiToken = typeof apiTokens.$inferInsert;
 export type PointComment = typeof pointComments.$inferSelect;
 export type NewPointComment = typeof pointComments.$inferInsert;
+export type ChecklistTemplateItem = typeof checklistTemplateItems.$inferSelect;

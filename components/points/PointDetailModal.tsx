@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { StatusDropdown } from "./StatusDropdown";
+import { FigmaCheckbox } from "./FigmaCheckbox";
 import { POINT_STATUS_META, type PointStatus } from "@/lib/constants";
 import type { ProjectPointWithActor, PointCommentView } from "@/lib/db/queries";
 import {
@@ -50,6 +51,8 @@ interface Props {
   /** true se o visitante pode editar este ponto (FG ou dono externo). */
   editable: boolean;
   onStatusChange: (status: PointStatus) => void;
+  /** De/para com o Figma — só passado para FG (o externo não vê o checkbox). */
+  onInFigmaChange?: (inFigma: boolean) => void;
   onClose: () => void;
 }
 
@@ -61,6 +64,7 @@ export function PointDetailModal({
   viewer,
   editable,
   onStatusChange,
+  onInFigmaChange,
   onClose,
 }: Props) {
   const [comments, setComments] = useState<PointCommentView[] | null>(null);
@@ -230,6 +234,19 @@ export function PointDetailModal({
             Atualizado por <strong>{updatedBy}</strong> ·{" "}
             {whenFmt.format(new Date(point.updatedAt))}
           </p>
+        )}
+
+        {onInFigmaChange && (
+          <div className={styles.figmaRow}>
+            <FigmaCheckbox
+              checked={point.inFigma}
+              onChange={onInFigmaChange}
+              label="Previsto no Figma inicial"
+            />
+            <span className={styles.figmaHint}>
+              Desmarcado = fora do layout aprovado (pedido novo).
+            </span>
+          </div>
         )}
 
         {/* ── Comentários ─────────────────────────────────────── */}

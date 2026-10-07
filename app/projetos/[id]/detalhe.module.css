@@ -48,6 +48,10 @@
   margin-bottom: 1.75rem;
 }
 
+.titleBlock {
+  min-width: 0;
+}
+
 .actions {
   display: flex;
   align-items: center;

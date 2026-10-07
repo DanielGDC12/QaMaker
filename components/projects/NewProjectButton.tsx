@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui";
 import { createProject, type CreateProjectState } from "@/app/projetos/actions";
+import { PROJECT_URL_MAX } from "@/lib/project-links";
 import styles from "./NewProjectButton.module.css";
 
 const initialState: CreateProjectState = {};
@@ -45,8 +46,8 @@ export function NewProjectButton() {
         <form action={formAction} className={styles.form}>
           <h2 className={styles.title}>Novo projeto</h2>
           <p className={styles.sub}>
-            O projeto começa vazio. Você adiciona os pontos de QA depois, na
-            página do projeto.
+            O projeto já nasce com os itens do Checklist FG. Pontos extras você
+            adiciona depois, na página do projeto.
           </p>
 
           <label className={styles.label} htmlFor="project-name">
@@ -59,6 +60,36 @@ export function NewProjectButton() {
             className={styles.input}
             placeholder="Ex.: Loja Acme"
             maxLength={120}
+            autoComplete="off"
+          />
+
+          <label
+            className={`${styles.label} ${styles.labelSpaced}`}
+            htmlFor="project-figma-url"
+          >
+            Link do Figma <span className={styles.optional}>(opcional)</span>
+          </label>
+          <input
+            id="project-figma-url"
+            name="figmaUrl"
+            className={styles.input}
+            placeholder="https://www.figma.com/design/…"
+            maxLength={PROJECT_URL_MAX}
+            autoComplete="off"
+          />
+
+          <label
+            className={`${styles.label} ${styles.labelSpaced}`}
+            htmlFor="project-admin-url"
+          >
+            Link do Admin <span className={styles.optional}>(opcional)</span>
+          </label>
+          <input
+            id="project-admin-url"
+            name="adminUrl"
+            className={styles.input}
+            placeholder="https://loja.com.br/admin"
+            maxLength={PROJECT_URL_MAX}
             autoComplete="off"
           />
           {state.error && <p className={styles.err}>{state.error}</p>}

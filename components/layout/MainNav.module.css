@@ -1,0 +1,29 @@
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  height: 2.25rem;
+  padding: 0 0.875rem;
+  font-size: 0.875rem;
+  font-weight: var(--fw-semibold);
+  letter-spacing: var(--tracking-snug);
+  color: var(--fg-cinza);
+  border-radius: var(--radius-sm);
+  transition: color 0.14s ease, background 0.14s ease;
+}
+.tab:hover {
+  color: var(--fg-bordo-ink);
+  background: var(--surface-muted);
+}
+
+/* Aba ativa: texto na cor da marca sobre fundo bordô suave. */
+.tabActive,
+.tabActive:hover {
+  color: var(--fg-vermelho);
+  background: rgba(106, 11, 17, 0.08);
+}

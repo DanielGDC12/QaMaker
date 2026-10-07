@@ -8,9 +8,10 @@ import {
   users,
   apiTokens,
   pointComments,
+  checklistTemplateItems,
 } from "./schema";
 import type { PointStatus, Category } from "@/lib/constants";
-import { DEFAULT_PROJECT_POINTS } from "@/lib/default-points";
+import type { ChecklistItemInput } from "@/lib/checklist-template";
 import type { Actor } from "@/lib/auth-guard";
 
 /* ── Usuários ─────────────────────────────────────────────── */
@@ -133,6 +134,17 @@ export async function setProjectResponsible(
     .where(eq(projects.id, projectId));
 }
 
+/**
+ * Grava os links de Figma e Admin do projeto (null remove). Os valores já
+ * chegam normalizados por `normalizeProjectUrl` na action que chama.
+ */
+export async function setProjectLinks(
+  projectId: string,
+  links: { figmaUrl: string | null; adminUrl: string | null }
+) {
+  await db.update(projects).set(links).where(eq(projects.id, projectId));
+}
+
 /** True se o e-mail corresponde a um usuário FG existente. */
 export async function userExists(email: string): Promise<boolean> {
   const [row] = await db
@@ -179,7 +191,7 @@ export async function getProjectPoints(
   const createdByShare = alias(projectShares, "created_by_share");
   const updatedByShare = alias(projectShares, "updated_by_share");
 
-  return db
+  const rows = await db
     .select({
       id: projectPoints.id,
       projectId: projectPoints.projectId,
@@ -195,6 +207,7 @@ export async function getProjectPoints(
       createdByIsExternal: projectPoints.createdByIsExternal,
       createdViaExtension: projectPoints.createdViaExtension,
       isDefault: projectPoints.isDefault,
+      inFigma: projectPoints.inFigma,
       updatedBy: projectPoints.updatedBy,
       createdByDisplayName: createdByShare.displayName,
       updatedByDisplayName: updatedByShare.displayName,
@@ -218,27 +231,50 @@ export async function getProjectPoints(
           )
     )
     .orderBy(asc(projectPoints.displayOrder));
+
+  // "Previsto no Figma" é marcação interna da FG: nem chega ao externo.
+  return actor.type === "fg"
+    ? rows
+    : rows.map((r) => ({ ...r, inFigma: false }));
 }
 
 /* ── Criar projeto já com o checklist padrão ───────────────
-   O id é gerado aqui (e não pelo `defaultRandom()` do banco) para que os dois
-   inserts caibam num único `db.batch()` — o driver neon-http não suporta
-   `db.transaction()`, mas o batch vai numa só requisição transacional, então
-   nunca sobra projeto sem pontos (nem pontos sem projeto). */
+   Os pontos são uma CÓPIA do template (checklist_template_items) no momento
+   da criação. O id é gerado aqui (e não pelo `defaultRandom()` do banco) para
+   que os dois inserts caibam num único `db.batch()` — o driver neon-http não
+   suporta `db.transaction()`, mas o batch vai numa só requisição
+   transacional, então nunca sobra projeto sem pontos (nem pontos sem
+   projeto). */
 export async function createProject(
   name: string,
-  createdBy: string
+  createdBy: string,
+  // A extensão (/api/ext/projects) cria sem links; a UI pode mandar ambos.
+  links: { figmaUrl: string | null; adminUrl: string | null } = {
+    figmaUrl: null,
+    adminUrl: null,
+  }
 ): Promise<string> {
   const id = crypto.randomUUID();
+  const template = await listChecklistTemplate();
+  const insertProject = db
+    .insert(projects)
+    .values({ id, name, createdBy, ...links });
+
+  // Template vazio (todos os itens removidos na aba Checklist FG): o projeto
+  // nasce sem pontos — o Drizzle não aceita insert com lista vazia.
+  if (template.length === 0) {
+    await insertProject;
+    return id;
+  }
 
   await db.batch([
-    db.insert(projects).values({ id, name, createdBy }),
+    insertProject,
     db.insert(projectPoints).values(
-      DEFAULT_PROJECT_POINTS.map((p, i) => ({
+      template.map((p, i) => ({
         projectId: id,
         category: p.category,
         title: p.title,
-        subtitle: p.subtitle ?? null,
+        subtitle: p.subtitle,
         displayOrder: i + 1,
         createdBy,
         createdByIsExternal: false,
@@ -259,6 +295,7 @@ export async function updateProjectPoint(
     status?: PointStatus;
     errorImageUrl?: string | null;
     notes?: string | null;
+    inFigma?: boolean;
   },
   updatedBy: string
 ) {
@@ -294,6 +331,7 @@ export async function addProjectPoint(
     subtitle?: string | null;
     displayOrder: number;
     errorImageUrl?: string | null;
+    inFigma?: boolean;
   },
   /** Autor: `id` = e-mail FG ou share.id; `isExternal` marca a origem. */
   author: { id: string; isExternal: boolean }
@@ -317,6 +355,71 @@ export async function deleteProjectPoint(pointId: string) {
     .where(eq(projectPoints.id, pointId))
     .returning({ errorImageUrl: projectPoints.errorImageUrl });
   return row ?? null;
+}
+
+/* ── Checklist FG (template dos itens fixos) ──────────────── */
+
+/** Itens do template na ordem em que viram pontos de um projeto novo. */
+export async function listChecklistTemplate() {
+  return db
+    .select()
+    .from(checklistTemplateItems)
+    .orderBy(
+      asc(checklistTemplateItems.displayOrder),
+      asc(checklistTemplateItems.createdAt)
+    );
+}
+
+/** Insere um item no fim do template (maior display_order + 1, no próprio SQL). */
+export async function addChecklistTemplateItem(
+  data: ChecklistItemInput,
+  updatedBy: string
+) {
+  const [row] = await db
+    .insert(checklistTemplateItems)
+    .values({
+      ...data,
+      displayOrder: sql`(select coalesce(max(${checklistTemplateItems.displayOrder}), 0) + 1 from ${checklistTemplateItems})`,
+      updatedBy,
+    })
+    .returning();
+  return row;
+}
+
+export async function updateChecklistTemplateItem(
+  id: string,
+  data: ChecklistItemInput,
+  updatedBy: string
+) {
+  const [row] = await db
+    .update(checklistTemplateItems)
+    .set({ ...data, updatedBy, updatedAt: new Date() })
+    .where(eq(checklistTemplateItems.id, id))
+    .returning();
+  return row ?? null;
+}
+
+export async function deleteChecklistTemplateItem(id: string) {
+  await db
+    .delete(checklistTemplateItems)
+    .where(eq(checklistTemplateItems.id, id));
+}
+
+/** Troca a posição de dois itens (um batch = uma requisição transacional). */
+export async function swapChecklistTemplateOrder(
+  a: { id: string; displayOrder: number },
+  b: { id: string; displayOrder: number }
+) {
+  await db.batch([
+    db
+      .update(checklistTemplateItems)
+      .set({ displayOrder: b.displayOrder })
+      .where(eq(checklistTemplateItems.id, a.id)),
+    db
+      .update(checklistTemplateItems)
+      .set({ displayOrder: a.displayOrder })
+      .where(eq(checklistTemplateItems.id, b.id)),
+  ]);
 }
 
 /* ── Acessos externos (project_shares) ────────────────────── */

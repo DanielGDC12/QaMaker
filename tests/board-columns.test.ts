@@ -10,7 +10,7 @@ import {
   type PointStatus,
 } from "@/lib/constants";
 
-/** Ponto do checklist padrão (cópia de DEFAULT_PROJECT_POINTS). */
+/** Ponto do checklist padrão (cópia do template checklist_template_items). */
 const checklist = (status: PointStatus) => ({ status, isDefault: true });
 /** Ponto criado à mão (UI, extensão ou ator externo). */
 const avulso = (status: PointStatus) => ({ status, isDefault: false });

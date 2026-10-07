@@ -39,7 +39,7 @@ export const SELECTABLE_STATUSES: readonly PointStatus[] = [
 
 /* ── Colunas do Kanban ────────────────────────────────────────
    O board NÃO é 1:1 com o status: o checklist padrão da FG
-   (`project_points.is_default`, cópia de DEFAULT_PROJECT_POINTS) fica retido
+   (`project_points.is_default`, cópia de checklist_template_items) fica retido
    numa coluna própria — "Checklist FG" — enquanto não for auditado. Só os
    status de conclusão (DONE_STATUSES) tiram o ponto de lá; "iniciado" muda
    apenas o pill do card. Pontos criados à mão nunca entram nessa coluna. */

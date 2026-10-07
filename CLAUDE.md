@@ -22,10 +22,13 @@ Next.js 16 (App Router) · React 19 · Drizzle ORM + Neon (driver HTTP serverles
 - **`lib/db/index.ts` é lazy** (proxy memoizado) → `next build` não exige env.
 - **Progresso**: status `feito` e `nao_possivel` contam; `pendente`/`iniciado`
   não. Lógica em `lib/constants.ts` (`calcProgress`, `deriveProjectStatus`).
-- **Projetos nascem com o checklist padrão da FG**: `lib/default-points.ts`
-  (`DEFAULT_PROJECT_POINTS`) é a fonte única; `createProject` insere projeto +
-  pontos num único `db.batch()` (neon-http **não** tem `db.transaction()`), com
-  o id gerado via `crypto.randomUUID()`. A inserção é uma **cópia**: editar o
+- **Projetos nascem com o checklist padrão da FG**: a fonte única é a tabela
+  `checklist_template_items`, editada na aba **Checklist FG** (`/checklist`,
+  FG-only; validação/reordenação em `lib/checklist-template.ts`). Foi semeada
+  pela migração 0009 — não existe mais lista em código. `createProject` lê o
+  template e insere projeto + pontos num único `db.batch()` (neon-http **não**
+  tem `db.transaction()`), com o id gerado via `crypto.randomUUID()`; template
+  vazio → projeto sem pontos. A inserção é uma **cópia**: editar o
   template não altera projetos já criados. Pontos extras seguem sendo criados
   manualmente (`AddPointButton`), escolhendo a "página de QA" (categoria em
   `CATEGORIES`). O board agrupa por categoria na ordem canônica de `CATEGORIES`.
@@ -38,6 +41,14 @@ Next.js 16 (App Router) · React 19 · Drizzle ORM + Neon (driver HTTP serverles
   soltar um ponto do checklist de volta nela reabre como `pendente`. Fonte
   única: `boardColumnOf`/`statusForDrop` em `lib/constants.ts` — é regra de
   layout do board, não de servidor (o dropdown segue oferecendo todo status).
+- **De/para com o Figma e links do projeto são FG-only**:
+  `project_points.in_figma` (checkbox "Previsto no Figma inicial" no card,
+  lista, modal e "Novo ponto") e `projects.figma_url`/`admin_url`. As actions
+  `setPointInFigma` e `setProjectLinksAction` usam `requireFGUser` (nunca
+  `requireProjectActor`); `getProjectPoints` zera `inFigma` para o externo e o
+  `addPoint` só lê o checkbox de FG. Links passam por `normalizeProjectUrl`
+  (`lib/project-links.ts`): só http(s) e **sem credenciais** — o admin guarda
+  apenas o link, nunca usuário/senha.
 - **`display_order` de novos pontos** vem de `getMaxDisplayOrder(projectId)`
   (sem filtro por ator) — derivar da lista visível colidiria com o checklist
   padrão, já que o ator externo só enxerga os pontos externos.
@@ -51,8 +62,9 @@ Next.js 16 (App Router) · React 19 · Drizzle ORM + Neon (driver HTTP serverles
   revogação sempre reconferida no banco). Regras: externo vê só pontos com
   `created_by_is_external = true`, mas edita/exclui só os próprios
   (`created_by = share.id`); tag "Qa Cliente" só aparece para FG. **Nunca**
-  troque `deleteProjectAction` nem as `share-actions` por `requireProjectActor`
-  — são FG-only (`requireFGUser`). `project_points.created_by`/`updated_by` são
+  troque `deleteProjectAction`, `setPointInFigma`, `setProjectLinksAction`, as
+  `share-actions` nem as actions de `/checklist` por `requireProjectActor` —
+  são FG-only (`requireFGUser`). `project_points.created_by`/`updated_by` são
   polimórficos (e-mail FG ou `project_shares.id`), sem FK.
 
 ## Comandos
