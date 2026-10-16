@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { StatusDropdown } from "./StatusDropdown";
 import { FigmaCheckbox } from "./FigmaCheckbox";
 import { POINT_STATUS_META, type PointStatus } from "@/lib/constants";
+import { isVideoUrl } from "@/lib/media";
 import type { ProjectPointWithActor, PointCommentView } from "@/lib/db/queries";
 import {
   getPointCommentsAction,
@@ -184,7 +185,20 @@ export function PointDetailModal({
           </svg>
         </button>
 
-        {point.errorImageUrl && (
+        {point.errorImageUrl && isVideoUrl(point.errorImageUrl) && (
+          <div className={styles.imgLink}>
+            <video
+              src={point.errorImageUrl}
+              aria-label="Gravação do erro"
+              className={styles.img}
+              controls
+              muted
+              playsInline
+              preload="metadata"
+            />
+          </div>
+        )}
+        {point.errorImageUrl && !isVideoUrl(point.errorImageUrl) && (
           <a
             href={point.errorImageUrl}
             target="_blank"

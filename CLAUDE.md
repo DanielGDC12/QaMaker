@@ -66,6 +66,13 @@ Next.js 16 (App Router) · React 19 · Drizzle ORM + Neon (driver HTTP serverles
   `share-actions` nem as actions de `/checklist` por `requireProjectActor` —
   são FG-only (`requireFGUser`). `project_points.created_by`/`updated_by` são
   polimórficos (e-mail FG ou `project_shares.id`), sem FK.
+- **`error_image_url` pode ser vídeo**: a extensão envia gravações (GIF, WebM,
+  MP4) direto ao Blob com token de cliente emitido por `/api/ext/uploads`
+  (regras em `lib/media.ts`; o arquivo não passa pela função, que tem teto de
+  4,5 MB na Vercel), e `/api/ext/cards` recebe só a `mediaUrl`, conferida com
+  `head()`. Sem coluna nova: quem exibe o "print" decide `<img>` vs `<video>`
+  por `isVideoUrl` (`ImageSlot`, `ImageZoomModal`, `PointDetailModal`). GIF
+  anima no `<img>`. O upload do dashboard (`lib/image.ts`) continua só imagem.
 
 ## Comandos
 - `npm run dev` · `npm run build` · `npm test` (vitest)

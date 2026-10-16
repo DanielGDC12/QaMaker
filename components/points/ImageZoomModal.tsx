@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { isVideoUrl } from "@/lib/media";
 import styles from "./ImageZoomModal.module.css";
 
 const MIN_SCALE = 1;
@@ -90,6 +91,38 @@ export function ImageZoomModal({ url, alt, open, onClose }: Props) {
   function onDoubleClick() {
     if (scale > MIN_SCALE) resetZoom();
     else setScale(2);
+  }
+
+  // Gravação: player nativo, sem zoom/arraste. Só monta com o modal aberto
+  // para não baixar nem tocar o vídeo em segundo plano.
+  if (isVideoUrl(url)) {
+    return (
+      <dialog ref={dialogRef} className={styles.dialog}>
+        <div className={styles.toolbar}>
+          <button
+            type="button"
+            className={styles.close}
+            onClick={onClose}
+            aria-label="Fechar"
+          >
+            ✕
+          </button>
+        </div>
+        <div className={styles.viewport}>
+          {open && (
+            <video
+              src={url}
+              aria-label={alt}
+              className={styles.image}
+              controls
+              autoPlay
+              muted
+              playsInline
+            />
+          )}
+        </div>
+      </dialog>
+    );
   }
 
   return (

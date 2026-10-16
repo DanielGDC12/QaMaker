@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { ACCEPT_ATTR, validateImageFile } from "@/lib/image";
+import { isVideoUrl } from "@/lib/media";
 import { setPointImage } from "@/app/projetos/[id]/actions";
 import { ImageZoomModal } from "./ImageZoomModal";
 import styles from "./ImageSlot.module.css";
@@ -32,14 +33,7 @@ export function ImageSlot({
     if (url) {
       return (
         <div className={styles.slot}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={url}
-            alt="Print do erro"
-            className={styles.preview}
-            onClick={() => setZoomOpen(true)}
-            style={{ cursor: "zoom-in" }}
-          />
+          <SlotPreview url={url} onClick={() => setZoomOpen(true)} cursor="zoom-in" />
           <ImageZoomModal
             url={url}
             alt="Print do erro"
@@ -115,13 +109,10 @@ export function ImageSlot({
   if (url) {
     return (
       <div className={styles.slot}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={url}
-          alt="Print do erro"
-          className={styles.preview}
+        <SlotPreview
+          url={url}
           onClick={() => !busy && setZoomOpen(true)}
-          style={{ cursor: busy ? "default" : "zoom-in" }}
+          cursor={busy ? "default" : "zoom-in"}
         />
         {busy && <div className={styles.busy}>Enviando…</div>}
         <button
@@ -184,5 +175,46 @@ export function ImageSlot({
       />
       {error && <p className={styles.error}>{error}</p>}
     </div>
+  );
+}
+
+/** Miniatura do print: imagem (inclusive GIF) ou o 1º quadro de um vídeo. */
+function SlotPreview({
+  url,
+  onClick,
+  cursor,
+}: {
+  url: string;
+  onClick: () => void;
+  cursor: string;
+}) {
+  if (isVideoUrl(url)) {
+    return (
+      <>
+        <video
+          src={url}
+          muted
+          playsInline
+          preload="metadata"
+          aria-label="Gravação do erro"
+          className={styles.preview}
+          onClick={onClick}
+          style={{ cursor }}
+        />
+        <span className={styles.videoBadge} aria-hidden>
+          ▶ Vídeo
+        </span>
+      </>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={url}
+      alt="Print do erro"
+      className={styles.preview}
+      onClick={onClick}
+      style={{ cursor }}
+    />
   );
 }
