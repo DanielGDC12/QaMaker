@@ -28,6 +28,8 @@ interface Props {
   onDragEnd?: () => void;
   /** Abre o modal de detalhe (clique no corpo do card). */
   onOpen?: () => void;
+  /** Abre o detalhe já no formulário de edição (página/título/descrição). */
+  onEdit?: () => void;
   onStatusChange: (status: PointStatus) => void;
   /** De/para com o Figma — só passado para FG (o externo não vê o checkbox). */
   onInFigmaChange?: (inFigma: boolean) => void;
@@ -57,6 +59,7 @@ export function PointCard({
   onDragStart,
   onDragEnd,
   onOpen,
+  onEdit,
   onStatusChange,
   onInFigmaChange,
   onDelete,
@@ -64,7 +67,7 @@ export function PointCard({
   const [confirming, setConfirming] = useState(false);
 
   // O arraste do card só inicia a partir do "corpo": controles interativos
-  // (imagem, status, excluir) são marcados com data-no-drag e cancelam o drag.
+  // (imagem, status, editar, excluir) são marcados com data-no-drag e cancelam o drag.
   function handleDragStart(e: DragEvent<HTMLElement>) {
     if ((e.target as HTMLElement).closest("[data-no-drag]")) {
       e.preventDefault();
@@ -175,24 +178,44 @@ export function PointCard({
               </button>
             </span>
           ) : (
-            <button
-              type="button"
-              className={styles.del}
-              data-no-drag
-              onClick={() => setConfirming(true)}
-              aria-label="Excluir ponto"
-              title="Excluir ponto"
-            >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
-                <path
-                  d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m2 0v12a1 1 0 01-1 1H8a1 1 0 01-1-1V7"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </button>
+            <span className={styles.actions} data-no-drag>
+              {onEdit && (
+                <button
+                  type="button"
+                  className={styles.edit}
+                  onClick={onEdit}
+                  aria-label="Editar ponto"
+                  title="Editar ponto"
+                >
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+                    <path
+                      d="M4 20h4L19 9a2.83 2.83 0 00-4-4L4 16v4zM13.5 6.5l4 4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </button>
+              )}
+              <button
+                type="button"
+                className={styles.del}
+                onClick={() => setConfirming(true)}
+                aria-label="Excluir ponto"
+                title="Excluir ponto"
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+                  <path
+                    d="M4 7h16M9 7V5a1 1 0 011-1h4a1 1 0 011 1v2m2 0v12a1 1 0 01-1 1H8a1 1 0 01-1-1V7"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </button>
+            </span>
           )}
         </div>
         <h3 className={styles.title}>{point.title}</h3>

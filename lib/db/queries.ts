@@ -293,6 +293,9 @@ export async function updateProjectPoint(
   pointId: string,
   patch: {
     status?: PointStatus;
+    category?: string;
+    title?: string;
+    subtitle?: string | null;
     errorImageUrl?: string | null;
     notes?: string | null;
     inFigma?: boolean;

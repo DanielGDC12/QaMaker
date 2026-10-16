@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { Button } from "@/components/ui";
 import { StatusDropdown } from "./StatusDropdown";
 import { FigmaCheckbox } from "./FigmaCheckbox";
-import { POINT_STATUS_META, type PointStatus } from "@/lib/constants";
+import { CATEGORIES, POINT_STATUS_META, type PointStatus } from "@/lib/constants";
 import { isVideoUrl } from "@/lib/media";
+import { POINT_TITLE_MAX, type PointDetailsInput } from "@/lib/point-details";
 import type { ProjectPointWithActor, PointCommentView } from "@/lib/db/queries";
 import {
   getPointCommentsAction,
   addCommentAction,
   deleteCommentAction,
+  type PointDetailsState,
 } from "@/app/projetos/[id]/actions";
 import styles from "./PointDetailModal.module.css";
 
@@ -33,6 +36,11 @@ function relTime(d: Date | string): string {
   return whenFmt.format(date);
 }
 
+/** Valores atuais do ponto como rascunho do formulário de edição. */
+function toDraft(p: ProjectPointWithActor): PointDetailsInput {
+  return { category: p.category, title: p.title, subtitle: p.subtitle ?? "" };
+}
+
 /** Identidade do visitante atual — para atribuir/apagar comentários. */
 export interface Viewer {
   /** e-mail (FG) ou share.id (externo) — casa com `authorId` do comentário. */
@@ -51,6 +59,10 @@ interface Props {
   viewer: Viewer;
   /** true se o visitante pode editar este ponto (FG ou dono externo). */
   editable: boolean;
+  /** Abre já no formulário de edição (botão "Editar" do card/lista). */
+  initialEditing?: boolean;
+  /** Salva página/título/descrição (otimista no board). */
+  onSaveDetails: (input: PointDetailsInput) => Promise<PointDetailsState>;
   onStatusChange: (status: PointStatus) => void;
   /** De/para com o Figma — só passado para FG (o externo não vê o checkbox). */
   onInFigmaChange?: (inFigma: boolean) => void;
@@ -64,6 +76,8 @@ export function PointDetailModal({
   viewerType,
   viewer,
   editable,
+  initialEditing = false,
+  onSaveDetails,
   onStatusChange,
   onInFigmaChange,
   onClose,
@@ -73,14 +87,30 @@ export function PointDetailModal({
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
-  // Fecha com Esc.
+  const [editing, setEditing] = useState(editable && initialEditing);
+  const [draft, setDraft] = useState<PointDetailsInput>(() => toDraft(point));
+  const [editError, setEditError] = useState<string | null>(null);
+  const [saving, startSaving] = useTransition();
+  const titleRef = useRef<HTMLInputElement>(null);
+
+  // Esc: no formulário, descarta a edição; fora dele, fecha o modal.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key !== "Escape") return;
+      if (!editing) onClose();
+      else if (!saving) {
+        setEditing(false);
+        setEditError(null);
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
+  }, [onClose, editing, saving]);
+
+  // Foca o título ao entrar no modo de edição.
+  useEffect(() => {
+    if (editing) titleRef.current?.focus();
+  }, [editing]);
 
   // Carrega os comentários ao abrir.
   useEffect(() => {
@@ -142,6 +172,39 @@ export function PointDetailModal({
     });
   }
 
+  function startEdit() {
+    setDraft(toDraft(point));
+    setEditError(null);
+    setEditing(true);
+  }
+
+  function cancelEdit() {
+    setEditing(false);
+    setEditError(null);
+  }
+
+  function saveEdit() {
+    if (saving) return;
+    setEditError(null);
+    startSaving(async () => {
+      try {
+        const res = await onSaveDetails(draft);
+        if ("error" in res) setEditError(res.error);
+        else setEditing(false);
+      } catch {
+        setEditError("Não foi possível salvar as alterações.");
+      }
+    });
+  }
+
+  // Ctrl/Cmd+Enter salva (útil na descrição, onde Enter quebra linha).
+  function onEditKey(e: React.KeyboardEvent<HTMLFormElement>) {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      saveEdit();
+    }
+  }
+
   /** Só o autor apaga o próprio comentário (mesmo id e mesmo espaço FG/externo). */
   function canDelete(c: PointCommentView): boolean {
     return c.authorId === viewer.id && c.authorIsExternal === viewer.isExternal;
@@ -159,6 +222,12 @@ export function PointDetailModal({
   const showQaCliente = viewerType === "fg" && point.createdByIsExternal;
   const updatedBy =
     point.updatedByDisplayName ?? point.updatedBy?.split("@")[0];
+  // Ponto legado com página fora da lista atual: mantém a opção dele no select.
+  const categoryOptions: readonly string[] = (
+    CATEGORIES as readonly string[]
+  ).includes(point.category)
+    ? CATEGORIES
+    : [...CATEGORIES, point.category];
 
   return (
     <div className={styles.overlay} onClick={onClose}>
@@ -236,12 +305,109 @@ export function PointDetailModal({
               Extensão
             </span>
           )}
+          {editable && !editing && (
+            <button type="button" className={styles.editBtn} onClick={startEdit}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden>
+                <path
+                  d="M4 20h4L19 9a2.83 2.83 0 00-4-4L4 16v4zM13.5 6.5l4 4"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Editar
+            </button>
+          )}
         </div>
 
-        <h2 className={styles.title}>{point.title}</h2>
-        <p className={styles.desc}>
-          {point.subtitle?.trim() ? point.subtitle : "Sem descrição."}
-        </p>
+        {editing ? (
+          <form
+            className={styles.editForm}
+            onSubmit={(e) => {
+              e.preventDefault();
+              saveEdit();
+            }}
+            onKeyDown={onEditKey}
+          >
+            <label className={styles.editLabel} htmlFor="edit-point-category">
+              Página de QA
+            </label>
+            <select
+              id="edit-point-category"
+              className={styles.editInput}
+              value={draft.category}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, category: e.target.value }))
+              }
+              disabled={saving}
+            >
+              {categoryOptions.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+
+            <label className={styles.editLabel} htmlFor="edit-point-title">
+              Título <span className={styles.req}>*</span>
+            </label>
+            <input
+              ref={titleRef}
+              id="edit-point-title"
+              className={styles.editInput}
+              value={draft.title}
+              onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))}
+              maxLength={POINT_TITLE_MAX}
+              autoComplete="off"
+              disabled={saving}
+            />
+
+            <label className={styles.editLabel} htmlFor="edit-point-subtitle">
+              Descrição <span className={styles.optional}>(opcional)</span>
+            </label>
+            <textarea
+              id="edit-point-subtitle"
+              className={styles.editInput}
+              value={draft.subtitle}
+              onChange={(e) =>
+                setDraft((d) => ({ ...d, subtitle: e.target.value }))
+              }
+              placeholder="O que verificar neste ponto"
+              rows={4}
+              disabled={saving}
+            />
+
+            {editError && <p className={styles.editErr}>{editError}</p>}
+
+            <div className={styles.editActions}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={cancelEdit}
+                disabled={saving}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                variant="primary"
+                size="sm"
+                disabled={saving || !draft.title.trim()}
+              >
+                {saving ? "Salvando…" : "Salvar"}
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <>
+            <h2 className={styles.title}>{point.title}</h2>
+            <p className={styles.desc}>
+              {point.subtitle?.trim() ? point.subtitle : "Sem descrição."}
+            </p>
+          </>
+        )}
 
         {updatedBy && (
           <p className={styles.audit}>

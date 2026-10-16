@@ -49,6 +49,12 @@ Next.js 16 (App Router) · React 19 · Drizzle ORM + Neon (driver HTTP serverles
   `addPoint` só lê o checkbox de FG. Links passam por `normalizeProjectUrl`
   (`lib/project-links.ts`): só http(s) e **sem credenciais** — o admin guarda
   apenas o link, nunca usuário/senha.
+- **Edição de ponto** (página/título/descrição, botão "Editar" no card, lista
+  e modal): `updatePointDetailsAction` com `requireProjectActor` +
+  `assertCanMutate` — mesma posse de status/excluir. Validação em
+  `lib/point-details.ts` (aceita manter página legada fora de `CATEGORIES`).
+  Não toca `is_default`: ponto do checklist editado segue na coluna Checklist
+  FG, e o template não muda.
 - **`display_order` de novos pontos** vem de `getMaxDisplayOrder(projectId)`
   (sem filtro por ator) — derivar da lista visível colidiria com o checklist
   padrão, já que o ator externo só enxerga os pontos externos.

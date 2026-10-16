@@ -32,6 +32,7 @@ import {
 import type { ProjectPoint } from "@/lib/db/schema";
 import { notifyResponsible } from "@/lib/slack";
 import { normalizeProjectUrl } from "@/lib/project-links";
+import { parsePointDetails, type PointDetailsInput } from "@/lib/point-details";
 import {
   appOriginFromHeaders,
   pointStatusChangedMessage,
@@ -219,6 +220,35 @@ export async function updatePointStatus(
   }
 
   revalidatePath(`/projetos/${projectId}`);
+}
+
+export type PointDetailsState = { ok: true } | { error: string };
+
+/**
+ * Edita página, título e descrição de um ponto (mesma posse de status/excluir:
+ * FG em tudo, externo só nos próprios). Não mexe em `is_default`: um ponto do
+ * checklist editado continua sendo do checklist — e o template não muda.
+ */
+export async function updatePointDetailsAction(
+  projectId: string,
+  pointId: string,
+  input: PointDetailsInput
+): Promise<PointDetailsState> {
+  try {
+    const actor = await requireProjectActor(projectId);
+    const point = await getProjectPoint(pointId);
+    assertCanMutate(actor, point, projectId);
+
+    const parsed = parsePointDetails(input, point.category);
+    if (!parsed.ok) return { error: parsed.error };
+
+    await updateProjectPoint(pointId, parsed.value, actorId(actor));
+  } catch {
+    return { error: "Não foi possível salvar as alterações." };
+  }
+
+  revalidatePath(`/projetos/${projectId}`);
+  return { ok: true };
 }
 
 /**
