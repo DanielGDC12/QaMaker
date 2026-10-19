@@ -223,9 +223,20 @@ export function PointCard({
         {(updatedByLabel || point.commentCount > 0) && (
         <div className={styles.footRow}>
           {updatedByLabel && (
-            <p className={styles.audit} title={updatedByLabel}>
-              Atualizado por {updatedByLabel} · {formatWhen(point.updatedAt)}
-            </p>
+            <div className={styles.audit} title={updatedByLabel}>
+              <span className={styles.auditAvatar} aria-hidden>
+                {point.updatedByAvatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={point.updatedByAvatarUrl} alt="" />
+                ) : (
+                  updatedByLabel.trim().charAt(0).toUpperCase()
+                )}
+              </span>
+              <span className={styles.auditText}>
+                <span className={styles.auditBy}>Atualizado por {updatedByLabel}</span>
+                <span className={styles.auditWhen}>{formatWhen(point.updatedAt)}</span>
+              </span>
+            </div>
           )}
           {point.commentCount > 0 && (
             <span

@@ -170,6 +170,7 @@ export async function getProjectPoint(pointId: string) {
 export type ProjectPointWithActor = typeof projectPoints.$inferSelect & {
   createdByDisplayName: string | null;
   updatedByDisplayName: string | null;
+  updatedByAvatarUrl: string | null;
   commentCount: number;
 };
 
@@ -190,6 +191,7 @@ export async function getProjectPoints(
 ): Promise<ProjectPointWithActor[]> {
   const createdByShare = alias(projectShares, "created_by_share");
   const updatedByShare = alias(projectShares, "updated_by_share");
+  const updatedByUser = alias(users, "updated_by_user");
 
   const rows = await db
     .select({
@@ -211,6 +213,7 @@ export async function getProjectPoints(
       updatedBy: projectPoints.updatedBy,
       createdByDisplayName: createdByShare.displayName,
       updatedByDisplayName: updatedByShare.displayName,
+      updatedByAvatarUrl: updatedByUser.avatarUrl,
       commentCount: sql<number>`(select count(*)::int from ${pointComments} where ${pointComments.pointId} = ${projectPoints.id})`,
     })
     .from(projectPoints)
@@ -222,6 +225,7 @@ export async function getProjectPoints(
       updatedByShare,
       sql`${projectPoints.updatedBy} = ${updatedByShare.id}::text`
     )
+    .leftJoin(updatedByUser, eq(projectPoints.updatedBy, updatedByUser.email))
     .where(
       actor.type === "fg"
         ? eq(projectPoints.projectId, projectId)
