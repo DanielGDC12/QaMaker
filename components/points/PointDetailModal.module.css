@@ -360,3 +360,96 @@
   font-size: 0.8125rem;
   color: var(--fg-vermelho, #b3122b);
 }
+
+/* ── Edição (página/título/descrição) ──────────────────────── */
+.editBtn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.25rem 0.55rem;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  background: var(--surface-card);
+  font-size: 0.75rem;
+  font-weight: var(--fw-semibold);
+  color: var(--fg-cinza);
+  transition: color 0.14s ease, border-color 0.14s ease;
+}
+.editBtn:hover {
+  color: var(--fg-bordo-ink);
+  border-color: var(--fg-bordo-ink);
+}
+
+.editForm {
+  display: flex;
+  flex-direction: column;
+}
+.editLabel {
+  font-size: 0.8125rem;
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-snug);
+  color: var(--fg-bordo-ink);
+  margin-top: 0.875rem;
+  margin-bottom: 0.4375rem;
+}
+.editLabel:first-child {
+  margin-top: 0.25rem;
+}
+.req {
+  color: var(--fg-rosa);
+}
+.optional {
+  font-weight: var(--fw-regular);
+  color: var(--fg-placeholder);
+}
+
+/* Espelha os campos do "Novo ponto" (AddPointButton). */
+.editInput {
+  height: 2.75rem;
+  padding: 0 0.9375rem;
+  border: 1px solid var(--border-field);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-weight: var(--fw-light);
+  font-size: 0.9375rem;
+  background: var(--surface-field);
+  color: var(--fg-bordo-ink);
+  transition: border-color 0.14s ease, box-shadow 0.14s ease;
+}
+.editInput:focus {
+  outline: none;
+  border-color: var(--fg-rosa);
+  box-shadow: 0 0 0 3px var(--pink-weak);
+}
+.editInput:disabled {
+  opacity: 0.7;
+}
+textarea.editInput {
+  height: auto;
+  padding: 0.75rem 0.9375rem;
+  resize: vertical;
+  line-height: var(--lh-body);
+}
+select.editInput {
+  appearance: none;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M3 5.5 L8 10.5 L13 5.5' fill='none' stroke='%23F91669' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.9375rem center;
+  padding-right: 2.5rem;
+}
+
+.editErr {
+  margin-top: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: var(--fw-medium);
+  color: var(--fg-vermelho-vivo);
+}
+
+.editActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}

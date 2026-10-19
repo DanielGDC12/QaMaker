@@ -21,9 +21,16 @@ import {
 } from "@/lib/constants";
 import type { ProjectPointWithActor } from "@/lib/db/queries";
 import {
+  parsePointDetails,
+  type PointDetails,
+  type PointDetailsInput,
+} from "@/lib/point-details";
+import {
   updatePointStatus,
+  updatePointDetailsAction,
   deletePoint,
   setPointInFigma,
+  type PointDetailsState,
 } from "@/app/projetos/[id]/actions";
 import styles from "./PointsBoard.module.css";
 
@@ -40,6 +47,7 @@ interface Props {
 type Action =
   | { type: "status"; id: string; status: PointStatus }
   | { type: "figma"; id: string; inFigma: boolean }
+  | { type: "details"; id: string; details: PointDetails }
   | { type: "delete"; id: string };
 
 type View = "kanban" | "lista";
@@ -72,7 +80,9 @@ export function PointsBoard({
       const patch =
         action.type === "status"
           ? { status: action.status }
-          : { inFigma: action.inFigma };
+          : action.type === "figma"
+            ? { inFigma: action.inFigma }
+            : action.details;
       return state.map((p) => (p.id === action.id ? { ...p, ...patch } : p));
     }
   );
@@ -84,6 +94,13 @@ export function PointsBoard({
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOverColumn, setDragOverColumn] = useState<BoardColumn | null>(null);
   const [openId, setOpenId] = useState<string | null>(null);
+  // O modal abre direto no formulário quando o usuário clica em "Editar".
+  const [openEditing, setOpenEditing] = useState(false);
+
+  function openPoint(pointId: string, editing = false) {
+    setOpenId(pointId);
+    setOpenEditing(editing);
+  }
 
   const { pct, done, total } = calcProgress(points);
 
@@ -158,6 +175,20 @@ export function PointsBoard({
         setError("Não foi possível salvar. Tente novamente.");
       }
     });
+  }
+
+  /**
+   * Salva página/título/descrição. Chamado dentro da transição do modal: o
+   * otimista vale até a resposta e reverte sozinho se o servidor recusar.
+   */
+  async function saveDetails(
+    point: ProjectPointWithActor,
+    input: PointDetailsInput
+  ): Promise<PointDetailsState> {
+    const parsed = parsePointDetails(input, point.category);
+    if (!parsed.ok) return { error: parsed.error };
+    applyOptimistic({ type: "details", id: point.id, details: parsed.value });
+    return updatePointDetailsAction(projectId, point.id, input);
   }
 
   function removePoint(pointId: string) {
@@ -417,7 +448,8 @@ export function PointsBoard({
                         dragging={draggingId === point.id}
                         onDragStart={() => onCardDragStart(point.id)}
                         onDragEnd={onCardDragEnd}
-                        onOpen={() => setOpenId(point.id)}
+                        onOpen={() => openPoint(point.id)}
+                        onEdit={() => openPoint(point.id, true)}
                         onStatusChange={(s) => changeStatus(point.id, s)}
                         onInFigmaChange={
                           isFG ? (v) => changeInFigma(point.id, v) : undefined
@@ -504,7 +536,26 @@ export function PointsBoard({
                 <span className={styles.listWhen}>
                   {updatedBy ? `${updatedBy} · ${whenFmt.format(new Date(point.updatedAt))}` : "—"}
                 </span>
-                <span>
+                <span className={styles.listActions}>
+                  {editable && (
+                    <button
+                      type="button"
+                      className={styles.listEdit}
+                      onClick={() => openPoint(point.id, true)}
+                      aria-label="Editar ponto"
+                      title="Editar ponto"
+                    >
+                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden>
+                        <path
+                          d="M4 20h4L19 9a2.83 2.83 0 00-4-4L4 16v4zM13.5 6.5l4 4"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    </button>
+                  )}
                   {editable && (
                     <button
                       type="button"
@@ -536,12 +587,15 @@ export function PointsBoard({
         if (!open) return null;
         return (
           <PointDetailModal
+            key={open.id}
             point={open}
             number={numberOf.get(open.id) ?? 0}
             pending={pendingId === open.id}
             viewerType={viewerType}
             viewer={viewer}
             editable={canEditPoint(open)}
+            initialEditing={openEditing}
+            onSaveDetails={(input) => saveDetails(open, input)}
             onStatusChange={(s) => changeStatus(open.id, s)}
             onInFigmaChange={
               isFG ? (v) => changeInFigma(open.id, v) : undefined

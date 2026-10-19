@@ -49,6 +49,12 @@ Next.js 16 (App Router) · React 19 · Drizzle ORM + Neon (driver HTTP serverles
   `addPoint` só lê o checkbox de FG. Links passam por `normalizeProjectUrl`
   (`lib/project-links.ts`): só http(s) e **sem credenciais** — o admin guarda
   apenas o link, nunca usuário/senha.
+- **Edição de ponto** (página/título/descrição, botão "Editar" no card, lista
+  e modal): `updatePointDetailsAction` com `requireProjectActor` +
+  `assertCanMutate` — mesma posse de status/excluir. Validação em
+  `lib/point-details.ts` (aceita manter página legada fora de `CATEGORIES`).
+  Não toca `is_default`: ponto do checklist editado segue na coluna Checklist
+  FG, e o template não muda.
 - **`display_order` de novos pontos** vem de `getMaxDisplayOrder(projectId)`
   (sem filtro por ator) — derivar da lista visível colidiria com o checklist
   padrão, já que o ator externo só enxerga os pontos externos.
@@ -66,6 +72,13 @@ Next.js 16 (App Router) · React 19 · Drizzle ORM + Neon (driver HTTP serverles
   `share-actions` nem as actions de `/checklist` por `requireProjectActor` —
   são FG-only (`requireFGUser`). `project_points.created_by`/`updated_by` são
   polimórficos (e-mail FG ou `project_shares.id`), sem FK.
+- **`error_image_url` pode ser vídeo**: a extensão envia gravações (GIF, WebM,
+  MP4) direto ao Blob com token de cliente emitido por `/api/ext/uploads`
+  (regras em `lib/media.ts`; o arquivo não passa pela função, que tem teto de
+  4,5 MB na Vercel), e `/api/ext/cards` recebe só a `mediaUrl`, conferida com
+  `head()`. Sem coluna nova: quem exibe o "print" decide `<img>` vs `<video>`
+  por `isVideoUrl` (`ImageSlot`, `ImageZoomModal`, `PointDetailModal`). GIF
+  anima no `<img>`. O upload do dashboard (`lib/image.ts`) continua só imagem.
 
 ## Comandos
 - `npm run dev` · `npm run build` · `npm test` (vitest)
